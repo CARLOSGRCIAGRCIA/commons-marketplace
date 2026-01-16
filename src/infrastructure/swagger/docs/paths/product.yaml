@@ -1,0 +1,775 @@
+paths:
+    /products:
+        get:
+            tags: [Products]
+            summary: Get all products
+            description: Returns a paginated list of all available products with advanced filtering options including category and subcategory filters.
+            parameters:
+                - $ref: '#/components/parameters/pageParam'
+                - $ref: '#/components/parameters/limitParam'
+                - in: query
+                  name: storeId
+                  schema:
+                      type: string
+                  description: Filter products by store ID
+                  example: '60c72b2f9b1d8e001f8e4c60'
+                - in: query
+                  name: categoryId
+                  schema:
+                      type: string
+                  description: Filter products by main category ID
+                  example: '60c72b2f9b1d8e001f8e4c5d'
+                - in: query
+                  name: subCategoryId
+                  schema:
+                      type: string
+                  description: Filter products by sub-category ID
+                  example: '60c72b2f9b1d8e001f8e4c5e'
+                - in: query
+                  name: minPrice
+                  schema:
+                      type: number
+                      format: float
+                      minimum: 0
+                  description: Minimum price filter
+                  example: 10.0
+                - in: query
+                  name: maxPrice
+                  schema:
+                      type: number
+                      format: float
+                      minimum: 0
+                  description: Maximum price filter
+                  example: 1000.0
+                - in: query
+                  name: search
+                  schema:
+                      type: string
+                  description: Search term for product name, description, or category names
+                  example: 'iphone'
+                - in: query
+                  name: sortBy
+                  schema:
+                      type: string
+                      enum: [name, price, stock, createdAt, updatedAt]
+                  description: Field to sort by
+                  example: price
+                - in: query
+                  name: order
+                  schema:
+                      type: string
+                      enum: [asc, desc]
+                      default: asc
+                  description: Sort order (ascending or descending)
+                  example: desc
+                - in: query
+                  name: status
+                  schema:
+                      type: string
+                      enum: [Active, Inactive, OutOfStock, Deleted]
+                      default: Active
+                  description: Filter by product status
+                  example: Active
+            responses:
+                '200':
+                    description: A paginated list of products with filtering and sorting applied.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/ProductResponse'
+                                    totalItems:
+                                        type: integer
+                                        example: 100
+                                    totalPages:
+                                        type: integer
+                                        example: 10
+                                    currentPage:
+                                        type: integer
+                                        example: 1
+                                    hasNextPage:
+                                        type: boolean
+                                        example: true
+                                    hasPrevPage:
+                                        type: boolean
+                                        example: false
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+        post:
+            tags: [Products]
+            summary: Create a new product
+            description: |
+                Adds a new product to the marketplace with images. 
+                Requires authentication and 'Seller' role.
+                Products must be associated with an approved store owned by the seller.
+                The sellerId is automatically extracted from the authenticated user's token.
+                Category and subcategory names are automatically resolved from their IDs.
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required:
+                                - name
+                                - description
+                                - price
+                                - stock
+                                - categoryId
+                                - storeId
+                                - mainImage
+                            properties:
+                                name:
+                                    type: string
+                                    example: 'iPhone 15 Pro'
+                                    minLength: 3
+                                    maxLength: 100
+                                description:
+                                    type: string
+                                    example: 'Latest Apple smartphone with advanced features'
+                                    minLength: 10
+                                    maxLength: 2000
+                                price:
+                                    type: number
+                                    format: float
+                                    example: 1199.99
+                                    minimum: 0.01
+                                stock:
+                                    type: integer
+                                    example: 25
+                                    minimum: 0
+                                categoryId:
+                                    type: string
+                                    example: '60c72b2f9b1d8e001f8e4c5d'
+                                    description: The main category ID this product belongs to (required)
+                                subCategoryId:
+                                    type: string
+                                    example: '60c72b2f9b1d8e001f8e4c5e'
+                                    description: The sub-category ID this product belongs to (optional, must be a child of the selected category)
+                                storeId:
+                                    type: string
+                                    example: '60c72b2f9b1d8e001f8e4c60'
+                                    description: The store ID this product belongs to (required, must be owned by the seller and approved)
+                                mainImage:
+                                    type: string
+                                    format: binary
+                                    description: Main product image (required, max 5MB)
+                                additionalImages:
+                                    type: array
+                                    items:
+                                        type: string
+                                        format: binary
+                                    description: Additional product images (max 5 images, 5MB each, optional)
+                                    maxItems: 5
+            responses:
+                '201':
+                    description: Product created successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProductResponse'
+                '400':
+                    description: Invalid input data or validation error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                missingStoreId:
+                                    value:
+                                        message: 'storeId is required. Products must be associated with a store.'
+                                invalidCategory:
+                                    value:
+                                        message: 'Category not found or inactive.'
+                                invalidSubcategory:
+                                    value:
+                                        message: 'Subcategory does not belong to the selected category.'
+                                storeNotApproved:
+                                    value:
+                                        message: 'Cannot create products for a store with status: Pending. Store must be Approved.'
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User does not have 'Seller' role or does not own the store.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                notStoreOwner:
+                                    value:
+                                        message: 'You can only create products for your own stores.'
+                '404':
+                    description: Store or category not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /products/store/{storeId}:
+        parameters:
+            - in: path
+              name: storeId
+              required: true
+              schema:
+                  type: string
+              description: The ID of the store to get products from.
+              example: '60c72b2f9b1d8e001f8e4c60'
+        get:
+            tags: [Products]
+            summary: Get all products from a specific store
+            description: Retrieves a paginated list of all products belonging to a specific store with optional filtering.
+            parameters:
+                - $ref: '#/components/parameters/pageParam'
+                - $ref: '#/components/parameters/limitParam'
+                - in: query
+                  name: categoryId
+                  schema:
+                      type: string
+                  description: Filter products by category ID within the store
+                  example: '60c72b2f9b1d8e001f8e4c5d'
+                - in: query
+                  name: subCategoryId
+                  schema:
+                      type: string
+                  description: Filter products by sub-category ID within the store
+                  example: '60c72b2f9b1d8e001f8e4c5e'
+                - in: query
+                  name: sortBy
+                  schema:
+                      type: string
+                      enum: [name, price, stock, createdAt, updatedAt]
+                  description: Field to sort by
+                  example: price
+                - in: query
+                  name: order
+                  schema:
+                      type: string
+                      enum: [asc, desc]
+                      default: asc
+                  description: Sort order (ascending or descending)
+                  example: desc
+            responses:
+                '200':
+                    description: A paginated list of products from the store.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/ProductResponse'
+                                    totalItems:
+                                        type: integer
+                                        example: 25
+                                    totalPages:
+                                        type: integer
+                                        example: 3
+                                    currentPage:
+                                        type: integer
+                                        example: 1
+                                    hasNextPage:
+                                        type: boolean
+                                        example: false
+                                    hasPrevPage:
+                                        type: boolean
+                                        example: true
+                '404':
+                    description: Store not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            example:
+                                message: 'Store not found'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /products/category/{categoryId}:
+        parameters:
+            - in: path
+              name: categoryId
+              required: true
+              schema:
+                  type: string
+              description: The ID of the category to get products from.
+              example: '60c72b2f9b1d8e001f8e4c5d'
+        get:
+            tags: [Products]
+            summary: Get all products from a specific category
+            description: Retrieves a paginated list of all products belonging to a specific category.
+            parameters:
+                - $ref: '#/components/parameters/pageParam'
+                - $ref: '#/components/parameters/limitParam'
+                - in: query
+                  name: subCategoryId
+                  schema:
+                      type: string
+                  description: Filter products by sub-category ID within the main category
+                  example: '60c72b2f9b1d8e001f8e4c5e'
+                - in: query
+                  name: sortBy
+                  schema:
+                      type: string
+                      enum: [name, price, stock, createdAt, updatedAt]
+                  description: Field to sort by
+                  example: price
+                - in: query
+                  name: order
+                  schema:
+                      type: string
+                      enum: [asc, desc]
+                      default: asc
+                  description: Sort order (ascending or descending)
+                  example: desc
+            responses:
+                '200':
+                    description: A paginated list of products from the category.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/ProductResponse'
+                                    totalItems:
+                                        type: integer
+                                        example: 50
+                                    totalPages:
+                                        type: integer
+                                        example: 5
+                                    currentPage:
+                                        type: integer
+                                        example: 1
+                '404':
+                    description: Category not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /products/search:
+        get:
+            tags: [Products]
+            summary: Search products
+            description: Search products by name, description, category names, or subcategory names with advanced filtering.
+            parameters:
+                - in: query
+                  name: q
+                  required: true
+                  schema:
+                      type: string
+                  description: Search query term
+                  example: 'iphone'
+                - $ref: '#/components/parameters/pageParam'
+                - $ref: '#/components/parameters/limitParam'
+                - in: query
+                  name: categoryId
+                  schema:
+                      type: string
+                  description: Filter search results by category ID
+                  example: '60c72b2f9b1d8e001f8e4c5d'
+                - in: query
+                  name: subCategoryId
+                  schema:
+                      type: string
+                  description: Filter search results by sub-category ID
+                  example: '60c72b2f9b1d8e001f8e4c5e'
+                - in: query
+                  name: minPrice
+                  schema:
+                      type: number
+                      format: float
+                  description: Minimum price filter
+                  example: 100
+                - in: query
+                  name: maxPrice
+                  schema:
+                      type: number
+                      format: float
+                  description: Maximum price filter
+                  example: 2000
+                - in: query
+                  name: sortBy
+                  schema:
+                      type: string
+                      enum: [name, price, stock, createdAt, updatedAt, relevance]
+                  description: Field to sort by
+                  example: relevance
+                - in: query
+                  name: order
+                  schema:
+                      type: string
+                      enum: [asc, desc]
+                      default: desc
+                  description: Sort order
+                  example: desc
+            responses:
+                '200':
+                    description: Search results with pagination.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/ProductResponse'
+                                    totalItems:
+                                        type: integer
+                                        example: 15
+                                    totalPages:
+                                        type: integer
+                                        example: 2
+                                    currentPage:
+                                        type: integer
+                                        example: 1
+                                    searchTerm:
+                                        type: string
+                                        example: 'iphone'
+                '400':
+                    description: Missing search query.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /products/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+              description: The ID of the product.
+              example: '60c72b2f9b1d8e001f8e4c5e'
+        get:
+            tags: [Products]
+            summary: Get a product by ID
+            description: Retrieves the details of a single product including category and subcategory information.
+            responses:
+                '200':
+                    description: Product details found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProductResponse'
+                '404':
+                    description: Product not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+        put:
+            tags: [Products]
+            summary: Update a product
+            description: |
+                Updates an existing product with optional image updates and category/subcategory changes. 
+                Requires authentication and ownership of the store the product belongs to, or Admin role.
+                Category and subcategory names are automatically resolved from their IDs.
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: query
+                  name: imageAction
+                  schema:
+                      type: string
+                      enum: [keep, add, replace]
+                      default: keep
+                  description: Action to perform on additional images (keep=maintain existing, add=append new, replace=delete old and upload new)
+                  example: add
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                    example: 'Updated Product Name'
+                                    minLength: 3
+                                    maxLength: 100
+                                description:
+                                    type: string
+                                    example: 'Updated product description'
+                                    minLength: 10
+                                    maxLength: 2000
+                                price:
+                                    type: number
+                                    format: float
+                                    example: 1299.99
+                                    minimum: 0.01
+                                stock:
+                                    type: integer
+                                    example: 30
+                                    minimum: 0
+                                categoryId:
+                                    type: string
+                                    example: '60c72b2f9b1d8e001f8e4c5d'
+                                    description: New category ID (will automatically resolve category name)
+                                subCategoryId:
+                                    type: string
+                                    example: '60c72b2f9b1d8e001f8e4c5e'
+                                    description: New sub-category ID (will automatically resolve subcategory name and validate against category)
+                                status:
+                                    type: string
+                                    enum: [Active, Inactive, OutOfStock, Deleted]
+                                    example: Active
+                                mainImage:
+                                    type: string
+                                    format: binary
+                                    description: New main product image (optional)
+                                additionalImages:
+                                    type: array
+                                    items:
+                                        type: string
+                                        format: binary
+                                    description: New additional product images (max 5, optional)
+                                    maxItems: 5
+            responses:
+                '200':
+                    description: Product updated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ProductResponse'
+                '400':
+                    description: Invalid input data or validation error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                invalidCategory:
+                                    value:
+                                        message: 'Category not found or inactive.'
+                                invalidSubcategory:
+                                    value:
+                                        message: 'Subcategory does not belong to the selected category.'
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User does not own the store or store is not approved.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                notStoreOwner:
+                                    value:
+                                        message: 'You do not have permission to modify this product. Only the store owner can modify products.'
+                '404':
+                    description: Product or associated store not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+        delete:
+            tags: [Products]
+            summary: Delete a product
+            description: |
+                Deletes a product and all its associated images. 
+                Requires authentication and ownership of the store the product belongs to, or Admin role.
+            security:
+                - BearerAuth: []
+            responses:
+                '204':
+                    description: Product deleted successfully. No content.
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User does not own the store or store is not approved.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Product or associated store not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: JWT token from Supabase Auth
+    parameters:
+        pageParam:
+            in: query
+            name: page
+            schema:
+                type: integer
+                minimum: 1
+                default: 1
+            description: Page number for pagination
+            example: 1
+        limitParam:
+            in: query
+            name: limit
+            schema:
+                type: integer
+                minimum: 1
+                maximum: 100
+                default: 10
+            description: Number of items per page
+            example: 10
+    schemas:
+        ProductResponse:
+            type: object
+            description: Represents a product in the system with complete category hierarchy.
+            properties:
+                id:
+                    type: string
+                    description: The product's unique identifier.
+                    example: '60c72b2f9b1d8e001f8e4c5e'
+                name:
+                    type: string
+                    example: 'iPhone 15 Pro'
+                    description: The product name
+                description:
+                    type: string
+                    example: 'Latest Apple smartphone with advanced features'
+                    description: Detailed product description
+                price:
+                    type: number
+                    format: float
+                    example: 1199.99
+                    description: Product price
+                stock:
+                    type: integer
+                    example: 25
+                    description: Available stock quantity
+                categoryId:
+                    type: string
+                    example: '60c72b2f9b1d8e001f8e4c5d'
+                    description: The ID of the main category
+                categoryName:
+                    type: string
+                    example: 'Electronics'
+                    description: The name of the main category (automatically resolved)
+                subCategoryId:
+                    type: string
+                    nullable: true
+                    example: '60c72b2f9b1d8e001f8e4c5e'
+                    description: The ID of the sub-category
+                subCategoryName:
+                    type: string
+                    nullable: true
+                    example: 'Smartphones'
+                    description: The name of the sub-category (automatically resolved)
+                sellerId:
+                    type: string
+                    example: 'auth0|60c72b2f9b1d8e001f8e4c5c'
+                    description: The ID of the authenticated user who created this product
+                storeId:
+                    type: string
+                    example: '60c72b2f9b1d8e001f8e4c60'
+                    description: The ID of the store this product belongs to
+                mainImageUrl:
+                    type: string
+                    format: uri
+                    example: 'https://example.com/images/iphone-15-pro.jpg'
+                    description: URL of the main product image
+                imageUrls:
+                    type: array
+                    items:
+                        type: string
+                        format: uri
+                    example:
+                        [
+                            'https://example.com/images/iphone-15-pro-1.jpg',
+                            'https://example.com/images/iphone-15-pro-2.jpg',
+                        ]
+                    description: Array of additional product images (max 5)
+                status:
+                    type: string
+                    enum: [Active, Inactive, OutOfStock, Deleted]
+                    example: 'Active'
+                    description: Current status of the product
+                createdAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T14:45:00Z'
+        ErrorResponse:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    type: string
+                    example: 'Product not found'
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            field:
+                                type: string
+                                example: 'price'
+                            message:
+                                type: string
+                                example: 'Price must be a positive number'
+                            value:
+                                type: string
+                                example: '-10'
+                code:
+                    type: string
+                    example: 'VALIDATION_ERROR'

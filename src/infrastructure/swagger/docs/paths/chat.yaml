@@ -1,0 +1,584 @@
+paths:
+    /chat/token:
+        get:
+            tags: [Chat]
+            summary: Generate Ably authentication token
+            description: Generates a token request for Ably real-time connection. This token is used to authenticate the client-side Ably connection for real-time messaging.
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Token generated successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        $ref: '#/components/schemas/AblyTokenRequest'
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /chat/messages:
+        post:
+            tags: [Chat]
+            summary: Send a message
+            description: Sends a message to another user. The message is stored in the database and published to Ably for real-time delivery.
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/SendMessageInput'
+            responses:
+                '201':
+                    description: Message sent successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        $ref: '#/components/schemas/MessageResponse'
+                '400':
+                    description: Invalid input data.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '422':
+                    description: Validation failed.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidationErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /chat/conversations:
+        get:
+            tags: [Chat]
+            summary: Get user conversations
+            description: Retrieves all conversations for the authenticated user with pagination support. Conversations are sorted by most recent activity.
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: query
+                  name: limit
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 100
+                      default: 20
+                  description: Maximum number of conversations to return.
+                  example: 20
+                - in: query
+                  name: skip
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  description: Number of conversations to skip for pagination.
+                  example: 0
+            responses:
+                '200':
+                    description: Conversations retrieved successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: object
+                                        properties:
+                                            conversations:
+                                                type: array
+                                                items:
+                                                    $ref: '#/components/schemas/ConversationResponse'
+                                            total:
+                                                type: integer
+                                                example: 45
+                                            hasMore:
+                                                type: boolean
+                                                example: true
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '422':
+                    description: Validation failed.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidationErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /chat/conversations/user/{participantId}:
+        parameters:
+            - in: path
+              name: participantId
+              required: true
+              schema:
+                  type: string
+              description: The MongoDB ObjectId of the other participant.
+              example: '60c72b2f9b1d8e001f8e4c5e'
+        get:
+            tags: [Chat]
+            summary: Get or create conversation with a user
+            description: Retrieves an existing conversation with a specific user, or creates a new one if it doesn't exist.
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Conversation retrieved or created successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        $ref: '#/components/schemas/ConversationResponse'
+                '400':
+                    description: Invalid participant ID or attempting to chat with yourself.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '422':
+                    description: Validation failed.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidationErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /chat/conversations/{conversationId}/messages:
+        parameters:
+            - in: path
+              name: conversationId
+              required: true
+              schema:
+                  type: string
+              description: The MongoDB ObjectId of the conversation.
+              example: '60c72b2f9b1d8e001f8e4c5e'
+        get:
+            tags: [Chat]
+            summary: Get conversation messages
+            description: Retrieves messages for a specific conversation with pagination. Messages are sorted by creation date (newest first).
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: query
+                  name: limit
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 100
+                      default: 50
+                  description: Maximum number of messages to return.
+                  example: 50
+                - in: query
+                  name: skip
+                  schema:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                  description: Number of messages to skip for pagination.
+                  example: 0
+            responses:
+                '200':
+                    description: Messages retrieved successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: object
+                                        properties:
+                                            messages:
+                                                type: array
+                                                items:
+                                                    $ref: '#/components/schemas/MessageResponse'
+                                            total:
+                                                type: integer
+                                                example: 127
+                                            hasMore:
+                                                type: boolean
+                                                example: true
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Conversation not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '422':
+                    description: Validation failed.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidationErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /chat/conversations/{conversationId}/read:
+        parameters:
+            - in: path
+              name: conversationId
+              required: true
+              schema:
+                  type: string
+              description: The MongoDB ObjectId of the conversation.
+              example: '60c72b2f9b1d8e001f8e4c5e'
+        put:
+            tags: [Chat]
+            summary: Mark messages as read
+            description: Marks all unread messages in a conversation as read and resets the unread count for the current user.
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Messages marked as read successfully.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: object
+                                        properties:
+                                            success:
+                                                type: boolean
+                                                example: true
+                                            updatedCount:
+                                                type: integer
+                                                description: Number of messages marked as read.
+                                                example: 5
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Conversation not found.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '422':
+                    description: Validation failed.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ValidationErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+    schemas:
+        AblyTokenRequest:
+            type: object
+            description: Ably token request object for client authentication.
+            properties:
+                keyName:
+                    type: string
+                    description: The key name from your Ably API key.
+                    example: 'xxxxx.xxxxxx'
+                timestamp:
+                    type: integer
+                    format: int64
+                    description: Unix timestamp in milliseconds.
+                    example: 1640000000000
+                nonce:
+                    type: string
+                    description: Random nonce for security.
+                    example: 'a1b2c3d4e5f6'
+                mac:
+                    type: string
+                    description: Message authentication code.
+                    example: 'XYZ123ABC456'
+                capability:
+                    type: object
+                    description: Permissions for channels.
+                    example:
+                        'chat:*': ['publish', 'subscribe', 'presence']
+                        'private:60c72b2f9b1d8e001f8e4c5e': ['publish', 'subscribe']
+                clientId:
+                    type: string
+                    description: User identifier for presence.
+                    example: '60c72b2f9b1d8e001f8e4c5e'
+
+        SendMessageInput:
+            type: object
+            description: Data required to send a message.
+            required:
+                - receiverId
+                - content
+            properties:
+                receiverId:
+                    type: string
+                    description: MongoDB ObjectId of the message receiver.
+                    example: '60c72b2f9b1d8e001f8e4c5e'
+                content:
+                    type: string
+                    description: Message content.
+                    minLength: 1
+                    maxLength: 5000
+                    example: 'Hello! Is this product still available?'
+                type:
+                    type: string
+                    enum: [text, image, file]
+                    default: text
+                    description: Type of message content.
+                    example: 'text'
+                metadata:
+                    type: object
+                    description: Additional metadata for the message.
+                    example:
+                        productId: '60c72b2f9b1d8e001f8e4c5f'
+                        productName: 'Handmade Ceramic Mug'
+
+        MessageResponse:
+            type: object
+            description: Represents a chat message.
+            properties:
+                id:
+                    type: string
+                    description: Message unique identifier.
+                    example: '60c72b2f9b1d8e001f8e4c60'
+                conversationId:
+                    type: string
+                    description: Conversation ID this message belongs to.
+                    example: '60c72b2f9b1d8e001f8e4c5e'
+                sender:
+                    type: object
+                    description: Sender user information.
+                    properties:
+                        _id:
+                            type: string
+                            example: '60c72b2f9b1d8e001f8e4c5c'
+                        name:
+                            type: string
+                            example: 'John Doe'
+                        email:
+                            type: string
+                            example: 'john@example.com'
+                        profilePicture:
+                            type: string
+                            format: uri
+                            example: 'https://example.com/avatar.jpg'
+                receiver:
+                    type: object
+                    description: Receiver user information.
+                    properties:
+                        _id:
+                            type: string
+                            example: '60c72b2f9b1d8e001f8e4c5e'
+                        name:
+                            type: string
+                            example: 'Jane Smith'
+                        email:
+                            type: string
+                            example: 'jane@example.com'
+                        profilePicture:
+                            type: string
+                            format: uri
+                            example: 'https://example.com/avatar2.jpg'
+                content:
+                    type: string
+                    example: 'Hello! Is this product still available?'
+                type:
+                    type: string
+                    enum: [text, image, file]
+                    example: 'text'
+                status:
+                    type: string
+                    enum: [sent, delivered, read]
+                    description: Current status of the message.
+                    example: 'sent'
+                metadata:
+                    type: object
+                    example:
+                        productId: '60c72b2f9b1d8e001f8e4c5f'
+                        productName: 'Handmade Ceramic Mug'
+                createdAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+
+        ConversationResponse:
+            type: object
+            description: Represents a conversation between two users.
+            properties:
+                id:
+                    type: string
+                    description: Conversation unique identifier.
+                    example: '60c72b2f9b1d8e001f8e4c5e'
+                participants:
+                    type: array
+                    description: Users participating in the conversation.
+                    items:
+                        type: object
+                        properties:
+                            _id:
+                                type: string
+                                example: '60c72b2f9b1d8e001f8e4c5c'
+                            name:
+                                type: string
+                                example: 'John Doe'
+                            email:
+                                type: string
+                                example: 'john@example.com'
+                            profilePicture:
+                                type: string
+                                format: uri
+                                example: 'https://example.com/avatar.jpg'
+                lastMessage:
+                    type: object
+                    description: The most recent message in the conversation.
+                    properties:
+                        _id:
+                            type: string
+                            example: '60c72b2f9b1d8e001f8e4c60'
+                        content:
+                            type: string
+                            example: 'Thanks for your interest!'
+                        createdAt:
+                            type: string
+                            format: date-time
+                            example: '2024-01-15T10:30:00Z'
+                lastMessageAt:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the last message.
+                    example: '2024-01-15T10:30:00Z'
+                unreadCount:
+                    type: integer
+                    description: Number of unread messages for the current user.
+                    example: 3
+                metadata:
+                    type: object
+                    example:
+                        archived: false
+                createdAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-10T08:00:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    example: '2024-01-15T10:30:00Z'
+
+        ValidationErrorResponse:
+            type: object
+            description: Validation error response.
+            required:
+                - message
+                - errors
+            properties:
+                message:
+                    type: string
+                    example: 'Validation failed. Submitted data is invalid.'
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            field:
+                                type: string
+                                example: 'content'
+                            message:
+                                type: string
+                                example: 'Content is required'
+                            value:
+                                type: string
+                                example: ''
+
+        ErrorResponse:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    type: string
+                    example: 'Conversation not found'
+                error:
+                    type: string
+                    example: 'Not Found'

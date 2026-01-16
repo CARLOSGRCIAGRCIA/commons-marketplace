@@ -1,0 +1,324 @@
+tags:
+    - name: Reviews
+      description: Operations related to reviews
+
+paths:
+    /reviews:
+        post:
+            tags:
+                - Reviews
+            summary: Create a new review
+            description: Create a new review for a product or service
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - userId
+                                - commentary
+                                - score
+                            properties:
+                                userId:
+                                    type: string
+                                    description: The ID of the user creating the review (must match authenticated user)
+                                    example: 'fafcd25a-0191-471f-ba33-15e4a17fcd25'
+                                commentary:
+                                    type: string
+                                    description: The review commentary text
+                                    example: 'Excelente producto, muy recomendado. Cumplió mis expectativas.'
+                                score:
+                                    type: integer
+                                    description: The review score (1-5)
+                                    minimum: 1
+                                    maximum: 5
+                                    example: 5
+                            example:
+                                userId: 'fafcd25a-0191-471f-ba33-15e4a17fcd25'
+                                commentary: 'Excelente producto, muy recomendado. Cumplió mis expectativas.'
+                                score: 5
+            responses:
+                '201':
+                    description: Review created successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: 'Review created successfully'
+                                    review:
+                                        $ref: '#/components/schemas/Review'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
+        get:
+            tags:
+                - Reviews
+            summary: Get all reviews
+            description: Get all reviews with optional filtering
+            parameters:
+                - name: userId
+                  in: query
+                  description: Filter reviews by user ID
+                  required: false
+                  schema:
+                      type: string
+                      example: 'fafcd25a-0191-471f-ba33-15e4a17fcd25'
+                - name: score
+                  in: query
+                  description: Filter reviews by score
+                  required: false
+                  schema:
+                      type: integer
+                      minimum: 1
+                      maximum: 5
+                      example: 4
+            responses:
+                '200':
+                    description: Reviews retrieved successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: 'Reviews retrieved successfully'
+                                    reviews:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/Review'
+                                    count:
+                                        type: integer
+                                        example: 5
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
+    /reviews/{id}:
+        get:
+            tags:
+                - Reviews
+            summary: Get a review by ID
+            description: Get a single review by its unique ID
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: The ID of the review to retrieve
+                  schema:
+                      type: string
+                      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            responses:
+                '200':
+                    description: Review retrieved successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: 'Review retrieved successfully'
+                                    review:
+                                        $ref: '#/components/schemas/Review'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
+        put:
+            tags:
+                - Reviews
+            summary: Update a review by ID
+            description: Update an existing review by its unique ID
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: The ID of the review to update
+                  schema:
+                      type: string
+                      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                commentary:
+                                    type: string
+                                    description: The updated review commentary text
+                                    example: 'El producto es bueno pero podría mejorar en calidad.'
+                                score:
+                                    type: integer
+                                    description: The updated review score (1-5)
+                                    minimum: 1
+                                    maximum: 5
+                                    example: 4
+                            example:
+                                commentary: 'El producto es bueno pero podría mejorar en calidad.'
+                                score: 4
+            responses:
+                '200':
+                    description: Review updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: 'Review updated successfully'
+                                    review:
+                                        $ref: '#/components/schemas/Review'
+                '400':
+                    $ref: '#/components/responses/BadRequest'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
+        delete:
+            tags:
+                - Reviews
+            summary: Delete a review by ID
+            description: Delete an existing review by its unique ID
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: The ID of the review to delete
+                  schema:
+                      type: string
+                      example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            responses:
+                '200':
+                    description: Review deleted successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: 'Review deleted successfully'
+                '401':
+                    $ref: '#/components/responses/Unauthorized'
+                '403':
+                    $ref: '#/components/responses/Forbidden'
+                '404':
+                    $ref: '#/components/responses/NotFound'
+                '500':
+                    $ref: '#/components/responses/InternalServerError'
+
+components:
+    schemas:
+        Review:
+            type: object
+            properties:
+                id:
+                    type: string
+                    description: The unique identifier of the review
+                    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+                userId:
+                    type: string
+                    description: The ID of the user who wrote the review (foreign key reference to user)
+                    example: 'fafcd25a-0191-471f-ba33-15e4a17fcd25'
+                commentary:
+                    type: string
+                    description: The review commentary text
+                    example: 'Excelente producto, muy recomendado. Cumplió mis expectativas.'
+                score:
+                    type: integer
+                    description: The review score (1-5)
+                    minimum: 1
+                    maximum: 5
+                    example: 5
+                createdAt:
+                    type: string
+                    format: date-time
+                    description: When the review was created
+                    example: '2024-11-13T10:30:00.000Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    description: When the review was last updated
+                    example: '2024-11-13T10:30:00.000Z'
+
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+
+    responses:
+        BadRequest:
+            description: Bad Request
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            error:
+                                type: string
+                                example: 'Invalid input data'
+        Unauthorized:
+            description: Unauthorized - Authentication required
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            error:
+                                type: string
+                                example: 'Access token is missing or invalid'
+        Forbidden:
+            description: Forbidden - Insufficient permissions
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            error:
+                                type: string
+                                example: 'Not authorized to perform this action'
+        NotFound:
+            description: Not Found
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            error:
+                                type: string
+                                example: 'Review not found'
+        InternalServerError:
+            description: Internal Server Error
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            error:
+                                type: string
+                                example: 'Internal server error'

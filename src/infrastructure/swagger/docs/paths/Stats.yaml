@@ -1,0 +1,87 @@
+paths:
+    /admin/stats:
+        get:
+            tags: [Admin]
+            summary: Get admin dashboard statistics
+            description: Retrieves comprehensive statistics for the admin dashboard including users, products, and orders metrics. Requires authentication and 'Admin' role.
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Admin statistics retrieved successfully.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/AdminStatsResponse'
+                '401':
+                    description: Unauthorized - Missing or invalid token.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User does not have 'Admin' role.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error.
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+    schemas:
+        AdminStatsResponse:
+            type: object
+            description: Admin dashboard statistics including users, products, and orders metrics.
+            properties:
+                totalUsers:
+                    type: integer
+                    description: Total number of registered users in the system.
+                    example: 1250
+                totalProducts:
+                    type: integer
+                    description: Total number of products available.
+                    example: 450
+                totalOrders:
+                    type: integer
+                    description: Total number of orders placed.
+                    example: 3200
+                totalRevenue:
+                    type: number
+                    format: float
+                    description: Total revenue generated from all orders.
+                    example: 125000.50
+                pendingOrders:
+                    type: integer
+                    description: Number of orders pending fulfillment.
+                    example: 45
+                activeUsers:
+                    type: integer
+                    description: Number of users active in the last 30 days.
+                    example: 380
+        ErrorResponse:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    type: string
+                    example: 'Forbidden - User does not have Admin role'
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            field:
+                                type: string
+                                example: 'role'
+                            message:
+                                type: string
+                                example: 'Admin role required'
+                            value:
+                                type: string
+                                example: 'Buyer'

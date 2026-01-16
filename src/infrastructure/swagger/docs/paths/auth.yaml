@@ -1,0 +1,107 @@
+paths:
+    /auth/register:
+        post:
+            tags: [Authentication]
+            summary: Register a new user
+            description: Register a new user with email and password using Supabase
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - password
+                            properties:
+                                email:
+                                    type: string
+                                    example: user@example.com
+                                password:
+                                    type: string
+                                    example: password123
+            responses:
+                '201':
+                    description: User registered successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: User registered successfully
+                                    user:
+                                        type: object
+                '400':
+                    description: Invalid input or Supabase error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /auth/login:
+        post:
+            tags: [Authentication]
+            summary: Login user
+            description: Login user with email and password via Supabase
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - email
+                                - password
+                            properties:
+                                email:
+                                    type: string
+                                    example: user@example.com
+                                password:
+                                    type: string
+                                    example: password123
+            responses:
+                '200':
+                    description: Login successful
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Login successful
+                                    token:
+                                        type: object
+                '401':
+                    description: Invalid credentials or Supabase error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /auth/logout:
+        post:
+            tags: [Authentication]
+            summary: Logout user
+            description: Logout the authenticated user by invalidating the session
+            security:
+                - bearerAuth: []
+            responses:
+                '200':
+                    description: User logged out successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: Logged out successfully
+                '400':
+                    description: Logout failed
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'

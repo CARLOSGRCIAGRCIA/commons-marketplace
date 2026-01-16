@@ -1,0 +1,364 @@
+paths:
+    /seller-requests:
+        post:
+            tags:
+                - Seller Requests
+            operationId: createSellerRequest
+            summary: Create a new seller request
+            description: Allows authenticated users to request seller privileges
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                message:
+                                    type: string
+                                    maxLength: 500
+                                    description: Optional message explaining why user wants to be a seller
+                                    example: 'I want to sell handmade crafts on this platform'
+            responses:
+                '201':
+                    description: Seller request created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/SellerRequest'
+                '400':
+                    description: Bad request - User already has a pending request or is already a seller
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '401':
+                    description: Unauthorized - Invalid or missing token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+        get:
+            tags:
+                - Seller Requests
+            operationId: getAllSellerRequests
+            summary: Get all seller requests (Admin only)
+            description: Retrieve all seller requests with optional filtering
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: query
+                  name: status
+                  schema:
+                      type: string
+                      enum: [pending, approved, rejected]
+                  description: Filter by request status
+                  example: pending
+            responses:
+                '200':
+                    description: List of seller requests
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: array
+                                        items:
+                                            $ref: '#/components/schemas/SellerRequest'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - Admin access only
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /seller-requests/me:
+        get:
+            tags:
+                - Seller Requests
+            operationId: getMySellerRequest
+            summary: Get current user's seller request
+            description: Retrieve the seller request for the authenticated user
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: User's seller request or not found message
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        $ref: '#/components/schemas/SellerRequest'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: No seller request found for this user
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        type: object
+                                        properties:
+                                            status:
+                                                type: string
+                                                example: 'not_found'
+                                            message:
+                                                type: string
+                                                example: 'No seller request found for this user'
+
+    /seller-requests/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+              description: Seller request MongoDB ID
+              example: '507f1f77bcf86cd799439011'
+        get:
+            tags:
+                - Seller Requests
+            operationId: getSellerRequestById
+            summary: Get seller request by ID (Admin only)
+            description: Retrieve a specific seller request
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Seller request details
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        $ref: '#/components/schemas/SellerRequest'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - Admin access only
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Seller request not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+        delete:
+            tags:
+                - Seller Requests
+            operationId: deleteSellerRequest
+            summary: Delete a seller request (Admin only)
+            description: Delete a seller request by ID
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Seller request deleted successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    message:
+                                        type: string
+                                        example: 'Seller request deleted successfully'
+                                    data:
+                                        $ref: '#/components/schemas/SellerRequest'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - Admin access only
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Seller request not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /seller-requests/{id}/status:
+        patch:
+            tags:
+                - Seller Requests
+            operationId: updateSellerRequestStatus
+            summary: Update seller request status (Admin only)
+            description: Approve or reject a seller request. If approved, updates user role to Seller.
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                      type: string
+                  description: Seller request MongoDB ID
+                  example: '507f1f77bcf86cd799439011'
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - status
+                            properties:
+                                status:
+                                    type: string
+                                    enum: [approved, rejected]
+                                    description: New status for the request
+                                    example: 'approved'
+                                adminComment:
+                                    type: string
+                                    maxLength: 500
+                                    description: Optional comment from admin
+                                    example: 'Application looks good, approved!'
+            responses:
+                '200':
+                    description: Seller request status updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success:
+                                        type: boolean
+                                        example: true
+                                    data:
+                                        $ref: '#/components/schemas/SellerRequest'
+                '400':
+                    description: Bad request - Only pending requests can be updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - Admin access only
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Seller request not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+    schemas:
+        SellerRequest:
+            type: object
+            description: Represents a request from a user to become a seller
+            properties:
+                id:
+                    type: string
+                    description: Seller request unique identifier
+                    example: '507f1f77bcf86cd799439011'
+                userId:
+                    type: string
+                    description: Supabase user ID
+                    example: 'a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8'
+                status:
+                    type: string
+                    enum: [pending, approved, rejected]
+                    description: Current status of the request
+                    example: 'pending'
+                message:
+                    type: string
+                    description: User's message explaining why they want to be a seller
+                    example: 'I want to sell handmade crafts'
+                adminComment:
+                    type: string
+                    description: Admin's comment on the request
+                    example: 'Approved - verified seller credentials'
+                    nullable: true
+                createdAt:
+                    type: string
+                    format: date-time
+                    description: Request creation timestamp
+                    example: '2024-01-15T10:30:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    description: Last update timestamp
+                    example: '2024-01-15T14:45:00Z'
+
+        ErrorResponse:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    type: string
+                    example: 'Seller request not found'
+                error:
+                    type: string
+                    example: 'Not Found'
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            field:
+                                type: string
+                                example: 'status'
+                            message:
+                                type: string
+                                example: 'Status must be either approved or rejected'
+                            value:
+                                type: string
+                                example: 'invalid_status'

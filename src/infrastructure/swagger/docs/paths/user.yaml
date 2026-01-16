@@ -1,0 +1,433 @@
+paths:
+    /users:
+        post:
+            tags: [Users]
+            summary: Create new user
+            description: Register a new user profile using an external ID
+            operationId: createUser
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UserInput'
+            responses:
+                '201':
+                    description: User created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserResponse'
+                '400':
+                    description: Invalid input data
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '409':
+                    description: User already exists
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+        get:
+            tags: [Users]
+            summary: Get all users
+            description: Returns a list of all registered user profiles stored in the service.
+            operationId: getAllUsers
+            responses:
+                '200':
+                    description: List of user profiles (might be empty)
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/UserResponse'
+                '401':
+                    description: Unauthorized - Missing or invalid token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+    /users/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+              description: User's external ID
+              example: 'usr_abcdef1234567890'
+        get:
+            tags: [Users]
+            summary: Get user by ID
+            description: Retrieve user details by external ID
+            operationId: getUserById
+            responses:
+                '200':
+                    description: User found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserResponse'
+                '401':
+                    description: Unauthorized - Missing or invalid token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+        put:
+            tags: [Users]
+            summary: Update user
+            description: Update specific user profile fields
+            operationId: updateUser
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UserUpdateInput'
+            responses:
+                '200':
+                    description: User updated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserResponse'
+                '400':
+                    description: Invalid update data
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '401':
+                    description: Unauthorized - Missing or invalid token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+        delete:
+            tags: [Users]
+            summary: Delete user
+            description: Permanently remove user profile
+            operationId: deleteUser
+            responses:
+                '204':
+                    description: User deleted
+                '401':
+                    description: Unauthorized - Missing or invalid token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+    /users/profile:
+        get:
+            tags: [Users]
+            summary: Get authenticated user profile
+            description: Returns complete profile information including personal data and email
+            operationId: getUserProfile
+            responses:
+                '200':
+                    description: User profile data
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/UserProfileResponse'
+                '401':
+                    description: Unauthorized - Invalid or missing token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+    /users/profile/picture:
+        patch:
+            tags: [Users]
+            summary: Update user profile picture
+            description: Upload and update the authenticated user's profile picture. Accepts image files (JPEG, PNG, GIF, WebP) up to 5MB.
+            operationId: updateProfilePicture
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required:
+                                - profilePicture
+                            properties:
+                                profilePicture:
+                                    type: string
+                                    format: binary
+                                    description: Profile picture image file (JPEG, PNG, GIF, WebP - max 5MB)
+                        encoding:
+                            profilePicture:
+                                contentType: image/jpeg, image/png, image/gif, image/webp
+            responses:
+                '200':
+                    description: Profile picture updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    message:
+                                        type: string
+                                        example: 'Profile picture updated successfully'
+                                    profilePicUrl:
+                                        type: string
+                                        format: url
+                                        example: 'https://example.com/uploads/profile_pictures/user_abc123.jpg'
+                '400':
+                    description: Invalid file or missing file
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                noFile:
+                                    summary: No file uploaded
+                                    value:
+                                        message: 'No profile picture file provided'
+                                invalidFileType:
+                                    summary: Invalid file type
+                                    value:
+                                        message: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed'
+                                fileTooLarge:
+                                    summary: File too large
+                                    value:
+                                        message: 'File size exceeds 5MB limit'
+                '401':
+                    description: Unauthorized - Invalid or missing token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+components:
+    schemas:
+        UserResponse:
+            type: object
+            description: Represents a user profile stored in the service.
+            properties:
+                _id:
+                    type: string
+                    description: Unique external identifier
+                    example: 'usr_abcdef1234567890'
+                name:
+                    type: string
+                    nullable: true
+                    example: 'Alex'
+                lastName:
+                    type: string
+                    nullable: true
+                    example: 'Doe'
+                phoneNumber:
+                    type: string
+                    nullable: true
+                    example: '+1234567890'
+                address:
+                    type: string
+                    nullable: true
+                    example: '123 Main St, City'
+                profilePicUrl:
+                    type: string
+                    format: url
+                    nullable: true
+                    example: 'https://example.com/profile.jpg'
+                isApprovedSeller:
+                    type: boolean
+                    example: false
+                createdAt:
+                    type: string
+                    format: date-time
+                    example: '2023-10-27T10:30:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    example: '2023-10-27T11:00:00Z'
+        UserProfileResponse:
+            type: object
+            description: Extended user profile including Supabase email
+            properties:
+                name:
+                    type: string
+                    nullable: true
+                    example: 'Alex'
+                lastName:
+                    type: string
+                    nullable: true
+                    example: 'Doe'
+                phoneNumber:
+                    type: string
+                    nullable: true
+                    example: '+1234567890'
+                address:
+                    type: string
+                    nullable: true
+                    example: '123 Main St, City'
+                profilePicUrl:
+                    type: string
+                    format: url
+                    nullable: true
+                    example: 'https://example.com/profile.jpg'
+                email:
+                    type: string
+                    format: email
+                    example: 'alex.doe@example.com'
+        UserInput:
+            type: object
+            required:
+                - _id
+            properties:
+                _id:
+                    type: string
+                    example: 'usr_newuser987654321'
+                name:
+                    type: string
+                    nullable: true
+                    example: 'Jamie'
+                lastName:
+                    type: string
+                    nullable: true
+                    example: 'Smith'
+                phoneNumber:
+                    type: string
+                    nullable: true
+                    example: '+1987654321'
+                address:
+                    type: string
+                    nullable: true
+                    example: '456 Oak Ave, Town'
+                profilePicUrl:
+                    type: string
+                    format: url
+                    nullable: true
+                    example: 'https://example.com/avatars/jamie.png'
+                isApprovedSeller:
+                    type: boolean
+                    example: false
+        UserUpdateInput:
+            type: object
+            minProperties: 1
+            properties:
+                name:
+                    type: string
+                    nullable: true
+                    example: 'Jamie R.'
+                lastName:
+                    type: string
+                    nullable: true
+                    example: 'Smith Jr.'
+                phoneNumber:
+                    type: string
+                    nullable: true
+                    example: '+1987654321'
+                address:
+                    type: string
+                    nullable: true
+                    example: '789 Pine Rd, Village'
+                profilePicUrl:
+                    type: string
+                    format: url
+                    nullable: true
+                    example: 'https://example.com/avatars/jamie_updated.jpg'
+                isApprovedSeller:
+                    type: boolean
+                    example: true
+        ErrorResponse:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    type: string
+                    example: 'User not found'
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            field:
+                                type: string
+                                example: 'profilePicUrl'
+                            message:
+                                type: string
+                                example: 'Invalid URL format'
+                            value:
+                                type: string
+                                example: 'htp:/invalid-url'
+                    example:
+                        - field: 'profilePicUrl'
+                          message: 'Invalid URL format'
+                          value: 'htp:/invalid-url'

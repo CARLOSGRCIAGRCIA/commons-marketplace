@@ -1,0 +1,489 @@
+# store.yaml - Actualizado con el endpoint GET /stores/:id
+
+paths:
+    /stores:
+        get:
+            tags:
+                - Stores
+            operationId: getAllStores
+            summary: Get all approved stores (Public)
+            description: Retrieve all stores with 'Approved' status. No authentication required.
+            responses:
+                '200':
+                    description: List of approved stores
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Store'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+        post:
+            tags:
+                - Stores
+            operationId: createStore
+            summary: Create a new store
+            description: Allows authenticated sellers to create a new store (maximum 2 stores per user)
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            required:
+                                - storeName
+                            properties:
+                                storeName:
+                                    type: string
+                                    description: Unique name for the store
+                                    example: 'My Awesome Store'
+                                description:
+                                    type: string
+                                    description: Store description
+                                    example: 'We sell handmade crafts and artisan products'
+                                logo:
+                                    type: string
+                                    format: binary
+                                    description: Store logo image (max 5MB, only images allowed)
+            responses:
+                '201':
+                    description: Store created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Store'
+                '400':
+                    description: Bad request - User has reached maximum limit or invalid data
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                maxStoresReached:
+                                    value:
+                                        message: 'User has reached the maximum limit of 2 stores.'
+                                invalidName:
+                                    value:
+                                        message: 'userId and storeName are required to create a store.'
+                                duplicateName:
+                                    value:
+                                        message: 'Store name already exists'
+                '401':
+                    description: Unauthorized - Invalid or missing token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User is not a seller
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /stores/me:
+        get:
+            tags:
+                - Stores
+            operationId: getMyStores
+            summary: Get current user's stores
+            description: Retrieve all stores owned by the authenticated user
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: List of user's stores
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Store'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User is not a seller
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /stores/{id}:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+              description: Store MongoDB ID
+              example: '507f1f77bcf86cd799439011'
+
+        get:
+            tags:
+                - Stores
+            operationId: getStoreById
+            summary: Get a single store by ID (Public)
+            description: Retrieve detailed information about a specific store by its ID. No authentication required. Returns store regardless of status.
+            responses:
+                '200':
+                    description: Store details retrieved successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Store'
+                '404':
+                    description: Store not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            example:
+                                message: 'Store not found.'
+                '500':
+                    description: Internal server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+        put:
+            tags:
+                - Stores
+            operationId: updateStore
+            summary: Update a store
+            description: Update store details. Only the store owner or an admin can update the store.
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    multipart/form-data:
+                        schema:
+                            type: object
+                            properties:
+                                storeName:
+                                    type: string
+                                    description: New store name
+                                    example: 'Updated Store Name'
+                                description:
+                                    type: string
+                                    description: New store description
+                                    example: 'Updated description for the store'
+                                logo:
+                                    type: string
+                                    format: binary
+                                    description: New store logo image (max 5MB, replaces old logo)
+            responses:
+                '200':
+                    description: Store updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Store'
+                '400':
+                    description: Bad request - No valid fields provided or invalid data
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                noFields:
+                                    value:
+                                        message: 'At least one field (storeName, description, logo) must be provided for an update.'
+                                duplicateName:
+                                    value:
+                                        message: 'Store name already exists'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User does not have permission to modify this store
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Store not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+        delete:
+            tags:
+                - Stores
+            operationId: deleteStore
+            summary: Delete a store
+            description: Delete a store. Only the store owner or an admin can delete the store. Logo will be deleted from storage.
+            security:
+                - BearerAuth: []
+            responses:
+                '204':
+                    description: Store deleted successfully (no content)
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User does not have permission to delete this store
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Store not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /stores/admin/pending:
+        get:
+            tags:
+                - Stores
+                - Admin
+            operationId: getPendingStores
+            summary: Get all pending stores (Admin only)
+            description: Retrieve all stores with 'Pending' status. Requires admin role.
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: List of pending stores
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Store'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User is not an admin
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /stores/admin/status/{status}:
+        get:
+            tags:
+                - Stores
+                - Admin
+            operationId: getStoresByStatus
+            summary: Get stores by status (Admin only)
+            description: Retrieve all stores filtered by status. Requires admin role.
+            security:
+                - BearerAuth: []
+            parameters:
+                - in: path
+                  name: status
+                  required: true
+                  schema:
+                      type: string
+                      enum: [Pending, Approved, Rejected, Suspended]
+                  description: Status to filter stores by
+                  example: 'Pending'
+            responses:
+                '200':
+                    description: List of stores with the specified status
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Store'
+                '400':
+                    description: Bad request - Invalid status value
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            example:
+                                message: 'Status must be one of: Pending, Approved, Rejected, Suspended'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User is not an admin
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /stores/admin/{id}/status:
+        parameters:
+            - in: path
+              name: id
+              required: true
+              schema:
+                  type: string
+              description: Store MongoDB ID
+              example: '507f1f77bcf86cd799439011'
+
+        patch:
+            tags:
+                - Stores
+                - Admin
+            operationId: updateStoreStatus
+            summary: Update store status (Admin only)
+            description: Update the status of a store. Requires admin role. Can be used to approve, reject, or suspend stores.
+            security:
+                - BearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - status
+                            properties:
+                                status:
+                                    type: string
+                                    enum: [Pending, Approved, Rejected, Suspended]
+                                    description: New status for the store
+                                    example: 'Approved'
+                                reason:
+                                    type: string
+                                    description: Optional reason for status change (especially useful for rejections)
+                                    example: 'Store meets all requirements'
+                                    maxLength: 500
+            responses:
+                '200':
+                    description: Store status updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Store'
+                '400':
+                    description: Bad request - Invalid status or missing required fields
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                            examples:
+                                invalidStatus:
+                                    value:
+                                        message: 'Status must be one of: Pending, Approved, Rejected, Suspended'
+                                missingStatus:
+                                    value:
+                                        message: 'Status is required'
+                '401':
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '403':
+                    description: Forbidden - User is not an admin
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Store not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+    schemas:
+        Store:
+            type: object
+            description: Represents a store owned by a seller
+            properties:
+                id:
+                    type: string
+                    description: Store unique identifier
+                    example: '507f1f77bcf86cd799439011'
+                userId:
+                    type: string
+                    description: Supabase user ID of the store owner
+                    example: 'a1b2c3d4-e5f6-7890-g1h2-i3j4k5l6m7n8'
+                storeName:
+                    type: string
+                    description: Unique name of the store
+                    example: 'Artisan Crafts Shop'
+                description:
+                    type: string
+                    description: Store description
+                    example: 'Handmade crafts and artisan products from local makers'
+                logo:
+                    type: string
+                    description: URL of the store logo in Supabase Storage
+                    example: 'https://example.supabase.co/storage/v1/object/public/stores/logo_123456.png'
+                    nullable: true
+                status:
+                    type: string
+                    enum: [Pending, Approved, Rejected, Suspended]
+                    description: Current status of the store
+                    example: 'Pending'
+                createdAt:
+                    type: string
+                    format: date-time
+                    description: Store creation timestamp
+                    example: '2024-01-15T10:30:00Z'
+                updatedAt:
+                    type: string
+                    format: date-time
+                    description: Last update timestamp
+                    example: '2024-01-15T14:45:00Z'
+
+        ErrorResponse:
+            type: object
+            required:
+                - message
+            properties:
+                message:
+                    type: string
+                    example: 'Store not found'
+                error:
+                    type: string
+                    example: 'Not Found'
+                errors:
+                    type: array
+                    items:
+                        type: object
+                        properties:
+                            field:
+                                type: string
+                                example: 'storeName'
+                            message:
+                                type: string
+                                example: 'Store name is required'
+                            value:
+                                type: string
+                                example: ''
+
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: JWT token from Supabase Auth

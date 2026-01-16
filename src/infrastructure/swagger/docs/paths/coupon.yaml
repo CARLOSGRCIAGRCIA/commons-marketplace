@@ -1,0 +1,37 @@
+paths:
+    /coupons/claim:
+        get:
+            tags: [Coupons]
+            summary: Claim a fictitious coupon
+            description: |
+                Demo endpoint for Blue/Green deployments.
+                Requires a valid Bearer token. Returns a generated coupon code (not persisted).
+            security:
+                - BearerAuth: []
+            responses:
+                '200':
+                    description: Coupon generated
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/CouponResponse'
+                '401':
+                    description: Unauthorized
+
+components:
+    schemas:
+        CouponResponse:
+            type: object
+            properties:
+                code:
+                    type: string
+                    example: NB-10-8F3A1C
+                discountPercent:
+                    type: integer
+                    example: 10
+                expiresAt:
+                    type: string
+                    format: date-time
+                message:
+                    type: string
+                    example: Coupon generated for user <id>. (Fictitious, not persisted)
