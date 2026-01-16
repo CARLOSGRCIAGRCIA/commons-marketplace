@@ -1,82 +1,68 @@
-# Estructura del Proyecto (Arquitectura Onion)
+# CommonMarketplace – Backend Service
 
-**CommonMarketplace** utiliza los principios de la **Arquitectura Onion** para garantizar una separación de responsabilidades clara, facilitar las pruebas y mejorar la mantenibilidad a largo plazo.
+**CommonMarketplace** is an e-commerce backend designed with a focus on **scalability, maintainability, and testability**, built using **Node.js, Express, and Onion Architecture**.
 
-La regla fundamental es que **todas las dependencias apuntan hacia el centro**. Las capas exteriores dependen de las interiores, pero el núcleo no sabe nada sobre las capas que lo rodean.
+The system manages users, roles, stores, products, categories, and messaging in real time, integrating **specialized external services** to delegate critical responsibilities such as authentication and real-time communication.
 
----
+This project was developed as a **frontend-independent** backend, geared toward real production environments and designed to be easily extensible.
 
-## `core` (Dominio)
+## Key Technical Decisions
 
-Es el corazón de la aplicación. Contiene toda la lógica y las reglas de negocio puras.
+- **Onion architecture** to decouple domain, application logic, and infrastructure.
+- **Supabase** for authentication and user management, avoiding sensitive logic within the system core.
+- **Ably** for real-time messaging between users (chat).
+- **MongoDB** as the main database.
+- **Docker + Nginx** to facilitate deployment and simulate a production environment.
+- **Testing** at the level of use cases, controllers, and services.
 
-- **Contenido típico**: Entidades de negocio, interfaces de repositorios, servicios de dominio.
-- **Regla clave**: No tiene **ninguna dependencia** de ninguna otra capa del proyecto.
+# Project Structure (Onion Architecture)
 
----
+**CommonMarketplace** uses the principles of **Onion Architecture** to ensure clear separation of responsibilities, facilitate testing, and improve long-term maintainability.
 
-## `application` (Casos de Uso)
-
-Orquesta la lógica del `core` para ejecutar las acciones específicas que la aplicación puede realizar. Define qué hace el software.
-
-- **Contenido típico**: Casos de uso (ej. `createUser`, `getProductById`), DTOs (Data Transfer Objects).
-- **Depende de**: `core`.
-
----
-
-## `infrastructure` (Infraestructura)
-
-Proporciona las implementaciones técnicas de las interfaces definidas en las capas internas. Es el "cómo" se conectan las cosas.
-
-- **Contenido**: Conexión a la base de datos, implementaciones de repositorios (para MongoDB), clientes para APIs externas.
-- **Depende de**: `core` y `application`.
+The fundamental rule is that **all dependencies point toward the center**. The outer layers depend on the inner layers, but the core knows nothing about the layers surrounding it.
 
 ---
 
-## `presentation` (Presentación)
+## `core` (Domain)
 
-Es el punto de entrada a la aplicación y la capa más externa. Se encarga de la interacción con el cliente (API CommonMarketplace-CLIENT).
+This is the heart of the application. It contains all the pure business logic and rules.
 
-- **Contenido típico**: Controllers, Routes, y middlewares.
-- **Depende de**: `application`.
+- **Typical content**: Business entities, repository interfaces, domain services.
+- **Key rule**: It has **no dependencies** on any other layer of the project.
+---
 
-### El Flujo de Dependencia
+## `application` (Use Cases)
 
-El flujo de control y dependencias sigue esta dirección:
+Orchestrates the logic of the `core` to execute specific actions that the application can perform. Defines what the software does.
+
+- **Typical content**: Use cases (e.g., `createUser`, `getProductById`), DTOs (Data Transfer Objects).
+- **Depends on**: `core`.
+
+---
+
+## `infrastructure`
+
+Provides the technical implementations of the interfaces defined in the internal layers. It is the “how” things are connected.
+
+- **Contents**: Database connection, repository implementations (for MongoDB), clients for external APIs.
+- **Depends on**: `core` and `application`.
+
+---
+
+## `presentation`
+
+This is the entry point to the application and the outermost layer. It handles interaction with the client (CommonMarketplace-CLIENT API).
+
+- **Typical content**: Controllers, Routes, and middlewares.
+- **Depends on**: `application`.
+
+### Dependency Flow
+
+The control flow and dependencies follow this direction:
 
 `Presentation` → `Application` → `Core`
 
-Esto significa que una clase en la capa `core` **nunca** debe importar o depender de algo en `application` o `infrastructure`.
-
-## Configuration Files
-
-1. .env.example: Template of environment variables required for project configuration. Includes settings for server, Supabase, and MongoDB.
-
-2. .eslintrc.cjs: ESLint configuration to maintain code standards. Includes rules for Google style guide, JSDoc, Prettier integration, and naming conventions.
-
-3. .prettierrc: Prettier configuration for automatic code formatting. Defines style rules such as single quotes, semicolons, and line length.
-
-## Development Scripts
-
-### Code Verification
-
-```bash
-npm run prettier:check    # Verify code format
-npm run lint             # Check for ESLint issues
-```
-
-### Automatic Correction
-
-```bash
-npm run lint:fix         # Fix ESLint issues
-```
-
-### Development
-
-```bash
-npm start              # Start production server
-npm run dev            # Development with hot reload (requires nodemon)
-```
+This means that a class in the `core` layer should **never** import or depend on anything in `application` or `infrastructure`.
 
 ### Docker Development
 
