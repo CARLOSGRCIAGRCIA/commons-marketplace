@@ -1,0 +1,215 @@
+/**
+ * Factory function to create a store controller.
+ * @param {object} useCases - An object containing all store-related use cases.
+ * @param {Function} useCases.createStoreUseCase - Use case for creating a store.
+ * @param {Function} useCases.getMyStoresUseCase - Use case for getting user's stores.
+ * @param {Function} useCases.getAllStoresUseCase - Use case for getting all stores.
+ * @param {Function} useCases.getStoreByIdUseCase - Use case for getting store by id.
+ * @param {Function} useCases.updateStoreUseCase - Use case for updating a store.
+ * @param {Function} useCases.deleteStoreUseCase - Use case for deleting a store.
+ * @param {Function} useCases.getPendingStoresUseCase - Use case for getting pending stores (admin only).
+ * @param {Function} useCases.getStoresByStatusUseCase - Use case for getting stores by status (admin only).
+ * @param {Function} useCases.updateStoreStatusUseCase - Use case for updating store status (admin only).
+ * @returns {object} An object with controller methods for store operations.
+ */
+export function createStoreController({
+    createStoreUseCase,
+    getMyStoresUseCase,
+    getAllStoresUseCase,
+    getStoreByIdUseCase,
+    updateStoreUseCase,
+    deleteStoreUseCase,
+    getPendingStoresUseCase,
+    getStoresByStatusUseCase,
+    updateStoreStatusUseCase,
+}) {
+    return {
+        /**
+         * Handles the request to create a new store for the authenticated user.
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async createStore(req, res, next) {
+            try {
+                const userId = req.user.id;
+                const { storeName, description } = req.body;
+                const file = req.file;
+
+                const storeData = {
+                    userId,
+                    storeName,
+                    description,
+                };
+
+                const newStore = await createStoreUseCase(storeData, file);
+                res.status(201).json(newStore);
+            } catch (error) {
+                next(error);
+            }
+        },
+
+        /**
+         * Handles the request to get all stores owned by the authenticated user.
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async getMyStores(req, res, next) {
+            try {
+                const userId = req.user.id;
+                const stores = await getMyStoresUseCase(userId);
+                res.status(200).json(stores);
+            } catch (error) {
+                next(error);
+            }
+        },
+
+        /**
+         * Handles the public request to get all approved stores.
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async getAllStores(req, res, next) {
+            try {
+                const stores = await getAllStoresUseCase();
+                res.status(200).json(stores);
+            } catch (error) {
+                next(error);
+            }
+        },
+
+        /**
+         * Handles the request to update a store.
+         * Can be performed by the owner or admin.
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async updateStore(req, res, next) {
+            try {
+                const storeId = req.params.id;
+                const updateData = req.body;
+                const file = req.file;
+
+                const updatedStore = await updateStoreUseCase(storeId, updateData, file);
+
+                if (!updatedStore) {
+                    return res.status(404).json({ message: 'Store not found.' });
+                }
+
+                res.status(200).json(updatedStore);
+            } catch (error) {
+                next(error);
+            }
+        },
+
+        /**
+         * Handles the request to delete a store.
+         * Can be performed by the owner or admin.
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async deleteStore(req, res, next) {
+            try {
+                const storeId = req.params.id;
+                const deletedStore = await deleteStoreUseCase(storeId);
+
+                if (!deletedStore) {
+                    return res.status(404).json({ message: 'Store not found.' });
+                }
+
+                res.status(204).send();
+            } catch (error) {
+                next(error);
+            }
+        },
+        /**
+         * Handles the public request to get a store by ID.
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async getStoreById(req, res, next) {
+            try {
+                const storeId = req.params.id;
+                const store = await getStoreByIdUseCase(storeId);
+
+                if (!store) {
+                    return res.status(404).json({ message: 'Store not found.' });
+                }
+
+                res.status(200).json(store);
+            } catch (error) {
+                next(error);
+            }
+        },
+        /**
+         * Handles the request to get all pending stores (admin only).
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async getPendingStores(req, res, next) {
+            try {
+                const stores = await getPendingStoresUseCase();
+                res.status(200).json(stores);
+            } catch (error) {
+                next(error);
+            }
+        },
+
+        /**
+         * Handles the request to get stores by status (admin only).
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async getStoresByStatus(req, res, next) {
+            try {
+                const { status } = req.params;
+                const stores = await getStoresByStatusUseCase(status);
+                res.status(200).json(stores);
+            } catch (error) {
+                next(error);
+            }
+        },
+
+        /**
+         * Handles the request to update a store's status (admin only).
+         * @param {object} req - The Express request object.
+         * @param {object} res - The Express response object.
+         * @param {Function} next - The Express next middleware function.
+         * @returns {Promise<void>}
+         */
+        async updateStoreStatus(req, res, next) {
+            try {
+                const storeId = req.params.id;
+                const { status, reason } = req.body;
+
+                const updateData = { status };
+                if (reason) updateData.reason = reason;
+
+                const updatedStore = await updateStoreStatusUseCase(storeId, updateData);
+
+                if (!updatedStore) {
+                    return res.status(404).json({ message: 'Store not found.' });
+                }
+
+                res.status(200).json(updatedStore);
+            } catch (error) {
+                next(error);
+            }
+        },
+    };
+}
