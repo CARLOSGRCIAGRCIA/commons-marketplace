@@ -1,0 +1,78 @@
+image: node:22.14.0
+
+stages:
+    - install
+    - test
+    - coverage
+    - lint
+    - build_and_push
+
+cache:
+    key:
+        files:
+            - package-lock.json
+    paths:
+        - node_modules/
+        - .npm/
+
+install_dependencies:
+    stage: install
+    script:
+        - echo "Installing dependencies..."
+        - npm ci
+    artifacts:
+        paths:
+            - node_modules/
+
+lint:
+    stage: lint
+    dependencies:
+        - install_dependencies
+    script:
+        - echo "Running Linting..."
+        - npm run lint
+
+unit_tests:
+    stage: test
+    dependencies:
+        - install_dependencies
+    variables:
+        NODE_ENV: test
+    script:
+        - echo "Running Unit Tests..."
+        - npm run test
+
+coverage:
+    stage: coverage
+    dependencies:
+        - unit_tests
+    script:
+        - echo "Generating coverage report..."
+        - npm run coverage
+        - ls -l coverage/lcov.info
+    coverage: /^\s*All files\s*\|\s*(\d+\.?\d*)\s*\|/
+    artifacts:
+        expire_in: 2 days
+        paths:
+            - coverage/
+
+build_and_push:
+    stage: build_and_push
+    image: docker:27
+    services:
+        - docker:27-dind
+    script:
+        - 'export BASE_VERSION=$(cat VERSION)'
+        - 'export NEW_TAG="DEV-${BASE_VERSION}.${CI_PIPELINE_IID}"'
+        - 'echo "Generando imagen con tag automático: $NEW_TAG"'
+        - 'docker build -t $CI_REGISTRY_IMAGE:$NEW_TAG .'
+        - 'docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY'
+        - 'docker push $CI_REGISTRY_IMAGE:$NEW_TAG'
+        - 'echo $NEW_TAG > image_tag.txt'
+    dependencies:
+        - quality_gates
+    artifacts:
+        paths:
+            - image_tag.txt
+    only:
+        - main
