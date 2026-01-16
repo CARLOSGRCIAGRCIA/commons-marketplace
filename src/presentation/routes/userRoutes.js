@@ -1,0 +1,54 @@
+import express from 'express';
+import { authenticate } from '../middlewares/authMiddleware.js';
+import { validate } from '../middlewares/validationMiddleware.js';
+import * as UserValidator from '../validators/userValidator.js';
+import { upload } from '../../infrastructure/web/express.js';
+
+export const createUserRoutes = (userController) => {
+    const router = express.Router();
+
+    router.post(
+        '/',
+        UserValidator.createUserValidation(),
+        validate,
+        authenticate,
+        userController.createUser,
+    );
+
+    router.get('/', authenticate, userController.getAllUsers);
+    router.get('/profile', authenticate, userController.getUserProfile);
+
+    router.patch(
+        '/profile/picture',
+        authenticate,
+        upload.single('profilePicture'),
+        userController.updateProfilePicture,
+    );
+
+    router.get(
+        '/:id',
+        UserValidator.userIdParamValidation(),
+        validate,
+        authenticate,
+        userController.getUserById,
+    );
+
+    router.put(
+        '/:id',
+        UserValidator.userIdParamValidation(),
+        UserValidator.updateUserValidation(),
+        validate,
+        authenticate,
+        userController.updateUserById,
+    );
+
+    router.delete(
+        '/:id',
+        UserValidator.userIdParamValidation(),
+        validate,
+        authenticate,
+        userController.deleteUserById,
+    );
+
+    return router;
+};
