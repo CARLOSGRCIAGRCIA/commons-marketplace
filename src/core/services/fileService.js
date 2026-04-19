@@ -1,6 +1,79 @@
 import supabase from '../../infrastructure/supabase/config/supabaseClient.js';
 import { internalServerError } from '../../presentation/exceptions/internalServerError.js';
 import { log } from '../../infrastructure/logger/logger.js';
+import sharp from 'sharp';
+import { getEnvironmentConfig } from '../../config/environment.js';
+
+const envConfig = getEnvironmentConfig();
+const isTest = envConfig.nodeEnv === 'test';
+
+/**
+ * Optimizes an image using sharp
+ * Resizes to max dimension, converts to webp/jpeg, compresses
+ * @param {Buffer} buffer - Original image buffer
+ * @param {string} mimetype - Original mimetype
+ * @returns {Promise<Buffer>} - Optimized image buffer
+ */
+const optimizeImage = async (buffer, mimetype) => {
+    if (isTest) {
+        return buffer;
+    }
+
+    try {
+        const image = sharp(buffer);
+        const metadata = await image.metadata();
+
+        let optimized = image.clone();
+
+        if (metadata.width > 1200 || metadata.height > 1200) {
+            optimized = optimized.resize(1200, 1200, {
+                fit: 'inside',
+                withoutEnlargement: true,
+            });
+        }
+
+        if (mimetype === 'image/png') {
+            optimized = optimized.png({ quality: 80, progressive: true });
+        } else if (mimetype === 'image/gif') {
+            optimized = optimized.gif();
+        } else if (mimetype === 'image/webp') {
+            optimized = optimized.webp({ quality: 80 });
+        } else {
+            optimized = optimized.jpeg({ quality: 80, progressive: true });
+        }
+
+        return optimized.toBuffer();
+    } catch (error) {
+        log.warn('Image optimization failed, using original', {
+            error: error.message,
+        });
+        return buffer;
+    }
+};
+
+/**
+ * Generates a thumbnail for product grids
+ * @param {Buffer} buffer - Original image buffer
+ * @returns {Promise<Buffer>} - Thumbnail buffer
+ */
+const generateThumbnail = async (buffer) => {
+    if (isTest) {
+        return buffer;
+    }
+
+    try {
+        return sharp(buffer)
+            .resize(300, 300, {
+                fit: 'cover',
+                position: 'center',
+            })
+            .jpeg({ quality: 70, progressive: true })
+            .toBuffer();
+    } catch (error) {
+        log.warn('Thumbnail generation failed', { error: error.message });
+        return buffer;
+    }
+};
 
 /**
  * Generates a unique filename for the file
@@ -45,9 +118,11 @@ export const uploadImage = async (file, options = {}) => {
 
         log.debug('Uploading image', { fileName, filePath, mimetype: file.mimetype });
 
+        const optimizedBuffer = await optimizeImage(file.buffer, file.mimetype);
+
         const { data, error } = await supabase.storage
             .from(process.env.SUPABASE_STORAGE_BUCKET)
-            .upload(filePath, file.buffer, {
+            .upload(filePath, optimizedBuffer, {
                 contentType: file.mimetype,
                 upsert: false,
             });
