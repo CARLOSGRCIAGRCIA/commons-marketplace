@@ -13,6 +13,7 @@ import { createSellerRequestRoutes } from './presentation/routes/sellerRequestRo
 import { createCouponRoutes } from './presentation/routes/couponRoutes.js';
 import { verifySupabaseConnection } from './infrastructure/supabase/config/supabaseClient.js';
 import connectDB from './infrastructure/database/db.js';
+import { createIndexes } from './infrastructure/database/indexes.js';
 import { errorHandler } from './presentation/middlewares/errorHandler.js';
 import logger from './infrastructure/logger/logger.js';
 import { getEnvironmentConfig } from './config/environment.js';
@@ -31,6 +32,10 @@ const createApp = async () => {
         throw new Error('Failed to connect to the database. Please check your configuration.');
     }
     logger.info('MongoDB connection established');
+
+    if (envConfig.nodeEnv !== 'test') {
+        await createIndexes();
+    }
 
     const supabaseConnected = await verifySupabaseConnection();
     if (!supabaseConnected) {

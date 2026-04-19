@@ -23,6 +23,27 @@ jest.mock('../src/infrastructure/supabase/config/supabaseClient.js', () => ({
     },
 }));
 
+jest.mock('../src/infrastructure/cache/cacheManager.js', () => ({
+    __esModule: true,
+    cacheManager: {
+        get: jest.fn().mockReturnValue(null),
+        set: jest.fn().mockReturnValue(true),
+        del: jest.fn().mockReturnValue(true),
+        delPattern: jest.fn().mockReturnValue(0),
+    },
+    CACHE_TTL: {
+        CATEGORIES: 1,
+        MAIN_CATEGORIES: 1,
+        SUBCATEGORIES: 1,
+    },
+    CACHE_KEYS: {
+        CATEGORIES: 'categories:all',
+        MAIN_CATEGORIES: 'categories:main',
+        SUBCATEGORIES: 'categories:sub:',
+    },
+    invalidateCache: jest.fn(),
+}));
+
 jest.mock('../src/infrastructure/logger/logger.js', () => ({
     log: {
         error: jest.fn(),
