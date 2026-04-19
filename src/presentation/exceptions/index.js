@@ -4,3 +4,4 @@ export { notFoundException } from './notFoundException.js';
 export { unauthorizedException } from './unauthorizedException.js';
 export { duplicateKeyException } from './duplicateKeyException.js';
 export { invalidCredentialsException } from './invalidCredentialsException.js';
+export { tooManyRequestsException } from './tooManyRequestsException.js';
