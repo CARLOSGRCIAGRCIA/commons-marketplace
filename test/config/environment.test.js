@@ -55,9 +55,7 @@ describe('Environment Configuration', () => {
             it('should include development CORS origins', () => {
                 const config = getEnvironmentConfig();
 
-                expect(config.corsOrigins).toContain(
-                    '',
-                );
+                expect(config.corsOrigins).toContain('');
                 expect(config.corsOrigins).toContain('');
             });
         });

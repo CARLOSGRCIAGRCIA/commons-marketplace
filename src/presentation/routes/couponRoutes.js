@@ -6,9 +6,7 @@ export const createCouponRoutes = (couponController) => {
 
     // Simple demo endpoint for Blue/Green: old deployment -> 404, new -> 200.
     // Only requires authentication.
-    router.get('/claim', 
-        authenticate, 
-        couponController.claimCoupon);
+    router.get('/claim', authenticate, couponController.claimCoupon);
 
     return router;
 };

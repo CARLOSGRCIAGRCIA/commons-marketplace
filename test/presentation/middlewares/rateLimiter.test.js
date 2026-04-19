@@ -1,4 +1,10 @@
-import { authLimiter, apiLimiter, uploadLimiter, passwordResetLimiter, chatLimiter } from '../../../src/presentation/middlewares/rateLimiter.js';
+import {
+    authLimiter,
+    apiLimiter,
+    uploadLimiter,
+    passwordResetLimiter,
+    chatLimiter,
+} from '../../../src/presentation/middlewares/rateLimiter.js';
 import { tooManyRequestsException } from '../../../src/presentation/exceptions/index.js';
 
 describe('Rate Limiter Middleware', () => {

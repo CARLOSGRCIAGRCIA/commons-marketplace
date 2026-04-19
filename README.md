@@ -78,15 +78,19 @@ flowchart TD
 ## Key design decisions
 
 ### Why Onion Architecture over MVC?
+
 MVC works fine for small APIs. At ~50 endpoints with role-based auth, ownership checks, and multiple external services, a flat MVC structure mixes concerns in ways that make testing painful. Onion makes the business logic layer independently testable — no Express, no MongoDB, no Supabase required in unit tests.
 
 ### Why Supabase for auth?
+
 JWT signing, token rotation, and session management are security-critical and easy to get wrong. Delegating that to Supabase means not writing or maintaining that code. The tradeoff is an external dependency — acceptable given the reliability guarantees.
 
 ### Why Ably for real-time?
+
 Managing persistent WebSocket connections at scale is a solved problem. Ably handles reconnection, presence, and delivery guarantees. The API surface is small and the integration stays in the infrastructure layer, so it's swappable.
 
 ### Why Jest with mocks instead of integration tests?
+
 Integration tests against a real MongoDB instance are slow and flaky in CI. By mocking repository interfaces, use case tests run in milliseconds and fail deterministically. Integration tests exist but are intentionally minimal.
 
 ---
@@ -100,32 +104,32 @@ Statements:  ~79%
 Branches:    ~69%
 ```
 
-| Layer | Coverage | Notes |
-|---|---|---|
-| Use Cases | 100% | Core business logic, fully mocked |
-| Validators | 100% | All input paths covered |
-| Controllers | ~90% | HTTP handling layer |
-| Services | ~80% | Domain logic |
+| Layer       | Coverage | Notes                             |
+| ----------- | -------- | --------------------------------- |
+| Use Cases   | 100%     | Core business logic, fully mocked |
+| Validators  | 100%     | All input paths covered           |
+| Controllers | ~90%     | HTTP handling layer               |
+| Services    | ~80%     | Domain logic                      |
 
 ---
 
 ## Stack
 
-| Layer | Technology |
-|---|---|
-| Runtime | Node.js 18+ |
-| Framework | Express.js 5.x |
-| Language | JavaScript (ES Modules) |
-| Architecture | Onion / DDD |
-| Database | MongoDB + Mongoose |
-| Auth | Supabase (JWT) |
-| Real-time | Ably (WebSocket) |
-| File storage | Supabase Storage |
-| Testing | Jest 29 |
-| Logging | Winston (structured) |
-| Docs | Swagger / OpenAPI 3.0 |
-| Containers | Docker + Nginx (SSL) |
-| Deployment | Blue/Green CI/CD |
+| Layer        | Technology              |
+| ------------ | ----------------------- |
+| Runtime      | Node.js 18+             |
+| Framework    | Express.js 5.x          |
+| Language     | JavaScript (ES Modules) |
+| Architecture | Onion / DDD             |
+| Database     | MongoDB + Mongoose      |
+| Auth         | Supabase (JWT)          |
+| Real-time    | Ably (WebSocket)        |
+| File storage | Supabase Storage        |
+| Testing      | Jest 29                 |
+| Logging      | Winston (structured)    |
+| Docs         | Swagger / OpenAPI 3.0   |
+| Containers   | Docker + Nginx (SSL)    |
+| Deployment   | Blue/Green CI/CD        |
 
 ---
 
@@ -160,15 +164,15 @@ src/
 
 50+ documented endpoints across 7 domains. Full interactive docs available at `/api-docs` in development.
 
-| Domain | Endpoints |
-|---|---|
-| Auth | Register · Login · Logout |
-| Users | Profile · CRUD · Avatar upload |
-| Stores | CRUD · Approval workflow (pending / approved / rejected) |
-| Products | CRUD · Inventory · Image upload |
-| Categories | Hierarchical (parent / child) |
-| Reviews | Ratings + comments |
-| Chat | Conversations · Messages · Real-time via Ably |
+| Domain     | Endpoints                                                |
+| ---------- | -------------------------------------------------------- |
+| Auth       | Register · Login · Logout                                |
+| Users      | Profile · CRUD · Avatar upload                           |
+| Stores     | CRUD · Approval workflow (pending / approved / rejected) |
+| Products   | CRUD · Inventory · Image upload                          |
+| Categories | Hierarchical (parent / child)                            |
+| Reviews    | Ratings + comments                                       |
+| Chat       | Conversations · Messages · Real-time via Ably            |
 
 ---
 

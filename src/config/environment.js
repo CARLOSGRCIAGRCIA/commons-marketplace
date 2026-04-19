@@ -22,9 +22,7 @@ const environments = {
         logLevel: 'debug',
     },
     development: {
-        corsOrigins: [
-            ''
-        ],
+        corsOrigins: [''],
         apiUrl: '',
         uiUrl: '',
         enableSwagger: true,

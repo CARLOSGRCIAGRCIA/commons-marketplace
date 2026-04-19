@@ -2,13 +2,7 @@ import crypto from 'crypto';
 
 /**
  * Generates a simple, fictitious coupon for an authenticated user.
- *
- * Notes:
- * - No DB persistence.
- * - No "only once" validation.
- * - Route protection is handled by the auth middleware.
- *
- * @returns {(userId: string) => Promise<{code: string, discountPercent: number, expiresAt: string, message: string}>}
+ * @returns {Function} Async function that generates coupon
  */
 export const claimCouponUseCase = () => async (userId) => {
     const prefix = 'NB';
