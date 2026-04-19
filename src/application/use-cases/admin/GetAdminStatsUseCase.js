@@ -1,8 +1,15 @@
 import { log } from '../../../infrastructure/logger/logger.js';
+import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../../../infrastructure/cache/cacheManager.js';
 
 export const createGetAdminStatsUseCase = (userRepository, productRepository) => {
     const execute = async () => {
         try {
+            const cached = cacheManager.get(CACHE_KEYS.ADMIN_STATS);
+            if (cached !== null) {
+                log.debug('Admin stats served from cache');
+                return cached;
+            }
+
             log.info('Fetching admin statistics');
 
             const [users, products] = await Promise.all([
@@ -18,15 +25,19 @@ export const createGetAdminStatsUseCase = (userRepository, productRepository) =>
             const userStats = calculateUserStats(users);
             const productStats = calculateProductStats(products);
 
+            const result = {
+                ...userStats,
+                ...productStats,
+            };
+
+            cacheManager.set(CACHE_KEYS.ADMIN_STATS, result, CACHE_TTL.ADMIN_STATS);
+
             log.info('Admin statistics calculated successfully', {
                 totalUsers: userStats.totalUsers,
                 totalProducts: productStats.totalProducts,
             });
 
-            return {
-                ...userStats,
-                ...productStats,
-            };
+            return result;
         } catch (error) {
             log.error('Error in GetAdminStatsUseCase', {
                 error: error.message,
