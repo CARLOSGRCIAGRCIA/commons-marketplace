@@ -1,6 +1,6 @@
 import { createCategoryDTO, categoryResponseDTO } from '../../dtos/categories/index.js';
 import { badRequestException } from '../../../presentation/exceptions/badRequestException.js';
-import { cacheManager, CACHE_KEYS, invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 export const createCategoryUseCase = (categoryRepository) => async (categoryData) => {
     if (!categoryData.name || !categoryData.slug) {

@@ -52,11 +52,12 @@ const optimizeImage = async (buffer, mimetype) => {
 };
 
 /**
- * Generates a thumbnail for product grids
+ * Generates a thumbnail for product grids.
  * @param {Buffer} buffer - Original image buffer
  * @returns {Promise<Buffer>} - Thumbnail buffer
+ * @todo Export this function for product thumbnail generation
  */
-const generateThumbnail = async (buffer) => {
+export const generateThumbnail = async (buffer) => {
     if (isTest) {
         return buffer;
     }

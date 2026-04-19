@@ -1,4 +1,3 @@
-import connectDB from './db.js';
 import { log } from '../logger/logger.js';
 import UserModel from './mongo/models/UserModel.js';
 import ProductModel from './mongo/models/ProductModel.js';

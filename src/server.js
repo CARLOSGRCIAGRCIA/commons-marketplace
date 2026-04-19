@@ -19,7 +19,9 @@ const startServer = async () => {
         const server = app.listen(PORT, '0.0.0.0', () => {
             logger.info('╔══════════════════════════════════════════════════════════════════╗');
             logger.info('║                                                                  ║');
-            logger.info('║     CommonMarketplace API Server Started                               ║');
+            logger.info(
+                '║     CommonMarketplace API Server Started                               ║',
+            );
             logger.info('║                                                                  ║');
             logger.info(
                 `║     Port: ${PORT}${' '.repeat(Math.max(0, 58 - PORT.toString().length))}║`,

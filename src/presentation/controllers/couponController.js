@@ -1,14 +1,17 @@
 /**
  * Factory function to create a coupon controller.
- *
- * @param {object} deps
- * @param {(userId: string) => Promise<object>} deps.claimCouponUseCase
+ * @param {object} deps - Dependencies
+ * @param {Function} deps.claimCouponUseCase - Use case to claim coupon
+ * @returns {object} Coupon controller
  */
 export const createCouponController = ({ claimCouponUseCase }) => {
     return {
         /**
-         * GET /api/coupons/claim
-         * Protected endpoint. Requires Authorization: Bearer <token>
+         * Handle coupon claim request.
+         * @param {object} req - Express request
+         * @param {object} res - Express response
+         * @param {Function} next - Express next
+         * @returns {Promise<void>}
          */
         async claimCoupon(req, res, next) {
             try {

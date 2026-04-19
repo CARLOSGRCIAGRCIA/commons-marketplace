@@ -6,7 +6,7 @@ import { log } from '../../infrastructure/logger/logger.js';
  * Custom handler for rate limit exceeded
  * @param {object} req - Express request object
  * @param {object} res - Express response object
- * @param {function} next - Express next function
+ * @param {Function} next - Express next function
  * @param {object} options - Rate limit options
  */
 const rateLimitHandler = (req, res, next, options) => {
@@ -27,7 +27,9 @@ const rateLimitHandler = (req, res, next, options) => {
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
-    message: tooManyRequestsException('Demasiados intentos de autenticacion. Intente en 15 minutos'),
+    message: tooManyRequestsException(
+        'Demasiados intentos de autenticacion. Intente en 15 minutos',
+    ),
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
@@ -75,7 +77,9 @@ export const uploadLimiter = rateLimit({
 export const passwordResetLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 3,
-    message: tooManyRequestsException('Demasiadas solicitudes de restablecimiento. Intente en 1 hora'),
+    message: tooManyRequestsException(
+        'Demasiadas solicitudes de restablecimiento. Intente en 1 hora',
+    ),
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,

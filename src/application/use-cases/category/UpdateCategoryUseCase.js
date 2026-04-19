@@ -1,5 +1,5 @@
 import { updateCategoryDTO, categoryResponseDTO } from '../../dtos/categories/index.js';
-import { invalidateCache, CACHE_KEYS } from '../../../infrastructure/cache/cacheManager.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 export const updateCategoryUseCase = (categoryRepository) => async (id, updateData) => {
     const categoryDTO = updateCategoryDTO(updateData);

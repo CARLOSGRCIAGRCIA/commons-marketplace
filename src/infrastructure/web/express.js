@@ -84,11 +84,14 @@ const getHelmetConfig = () => {
                 frameSrc: ["'none'"],
             },
         },
-        hsts: envConfig.nodeEnv === 'production' ? {
-            maxAge: 31536000,
-            includeSubDomains: true,
-            preload: true,
-        } : false,
+        hsts:
+            envConfig.nodeEnv === 'production'
+                ? {
+                      maxAge: 31536000,
+                      includeSubDomains: true,
+                      preload: true,
+                  }
+                : false,
         referrerPolicy: {
             policy: 'strict-origin-when-cross-origin',
         },

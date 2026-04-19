@@ -7,13 +7,14 @@ const envConfig = getEnvironmentConfig();
 const isTest = envConfig.nodeEnv === 'test';
 
 /**
- * Cache manager for application data
- * Provides in-memory caching for categories, products, and admin stats
- * @class
+ * Cache manager for application data.
+ * Provides in-memory caching for categories, products, and admin stats.
+ * Uses node-cache with automatic expiration.
+ * @description In-memory cache manager class
  */
 class CacheManager {
     /**
-     * @constructor
+     * Constructs a new CacheManager instance.
      * @param {number} defaultTtl - Default time to live in seconds
      * @param {number} checkPeriod - Check period for expired keys
      */
@@ -161,9 +162,10 @@ class CacheManager {
         return {
             ...this.stats,
             keys: this.cache.keys().length,
-            hitRate: this.stats.hits + this.stats.misses > 0
-                ? (this.stats.hits / (this.stats.hits + this.stats.misses)) * 100
-                : 0,
+            hitRate:
+                this.stats.hits + this.stats.misses > 0
+                    ? (this.stats.hits / (this.stats.hits + this.stats.misses)) * 100
+                    : 0,
         };
     }
 
