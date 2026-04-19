@@ -7,6 +7,7 @@ import compression from 'compression';
 import { swaggerDocs } from '../swagger/swagger.config.js';
 import { getEnvironmentConfig } from '../../config/environment.js';
 import { HealthCheck } from '../services/healthCheck.js';
+import packageJson from '../../package.json';
 
 const storage = multer.memoryStorage();
 
@@ -138,6 +139,7 @@ const setupExpress = (app) => {
             status: health.status,
             timestamp: health.timestamp,
             uptime: health.uptime,
+            version: packageJson.version,
             environment: envConfig.nodeEnv,
             service: 'commons-marketplace',
             checks: health.checks,
@@ -163,7 +165,7 @@ const setupExpress = (app) => {
 
         res.json({
             message: 'CommonMarketplace API Service',
-            version: '1.0.0',
+            version: packageJson.version,
             environment: envConfig.nodeEnv,
             status: 'running',
             endpoints,

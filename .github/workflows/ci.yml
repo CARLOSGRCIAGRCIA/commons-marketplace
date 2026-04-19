@@ -1,98 +1,86 @@
-name: CI
+name: CI/CD
 
 on:
-    push:
-        branches: [main]
-    pull_request:
-        branches: [main]
-
-env:
-    NODE_VERSION: '22.14.0'
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
 
 jobs:
-    lint:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Run Lint
-              run: npm run lint
+      - name: Run linter
+        run: npm run lint
 
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-            - name: Run Unit Tests
-              run: npm run test
-              env:
-                  NODE_ENV: test
+      - name: Run tests
+        run: npm test
 
-    coverage:
-        runs-on: ubuntu-latest
-        steps:
-            - uses: actions/checkout@v4
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: ${{ env.NODE_VERSION }}
-                  cache: 'npm'
+  build:
+    name: Build Docker
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Get version
+        id: version
+        run: echo "VERSION=$(node -p \"require('./package.json').version\")" >> $GITHUB_OUTPUT
 
-            - name: Generate Coverage Report
-              run: npm run coverage
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-            - name: Upload coverage reports
-              uses: codecov/codecov-action@v4
-              with:
-                  files: ./coverage/lcov.info
-                  fail_ci_if_error: false
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: |
+            commons-marketplace:${{ steps.version.outputs.VERSION }}
+            commons-marketplace:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-    build:
-        needs: [lint, test, coverage]
-        runs-on: ubuntu-latest
-        if: github.ref == 'refs/heads/main'
-        steps:
-            - uses: actions/checkout@v4
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-            - name: Read version
-              id: version
-              run: |
-                  BASE_VERSION=$(cat VERSION)
-                  NEW_TAG="DEV-${BASE_VERSION}.${GITHUB_RUN_NUMBER}"
-                  echo "$NEW_TAG" > image_tag.txt
-                  echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
-
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
-
-            - name: Build Docker image
-              run: |
-                  docker build -t "commons-marketplace:${{ steps.version.outputs.new_tag }}" .
-
-            - name: Upload image tag file
-              uses: actions/upload-artifact@v4
-              with:
-                  name: image-tag
-                  path: image_tag.txt
+      - name: Run npm audit
+        run: npm audit --audit-level=high || true
