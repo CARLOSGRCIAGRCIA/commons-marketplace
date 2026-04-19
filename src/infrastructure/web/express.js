@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import multer from 'multer';
+import compression from 'compression';
 import { swaggerDocs } from '../swagger/swagger.config.js';
 import { getEnvironmentConfig } from '../../config/environment.js';
 
@@ -29,6 +30,7 @@ export const upload = multer({
 /**
  * Configure CORS options
  * @description Sets up CORS configuration based on environment
+ * Supports dynamic origins from environment variable CORS_ORIGINS
  * @returns {object} CORS configuration object
  */
 const getCorsOptions = () => {
@@ -42,6 +44,8 @@ const getCorsOptions = () => {
             }
 
             if (allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else if (envConfig.nodeEnv === 'development') {
                 callback(null, true);
             } else {
                 console.warn(`CORS rejected origin: ${origin}`);
@@ -57,6 +61,41 @@ const getCorsOptions = () => {
 };
 
 /**
+ * Enhanced Helmet configuration
+ * @description Improved security headers configuration
+ * @returns {object} Helmet configuration object
+ */
+const getHelmetConfig = () => {
+    const envConfig = getEnvironmentConfig();
+
+    return {
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        crossOriginEmbedderPolicy: false,
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'", "'unsafe-inline'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", 'data:', 'https:'],
+                connectSrc: ["'self'", 'https://*.supabase.co'],
+                fontSrc: ["'self'"],
+                objectSrc: ["'none'"],
+                mediaSrc: ["'self'"],
+                frameSrc: ["'none'"],
+            },
+        },
+        hsts: envConfig.nodeEnv === 'production' ? {
+            maxAge: 31536000,
+            includeSubDomains: true,
+            preload: true,
+        } : false,
+        referrerPolicy: {
+            policy: 'strict-origin-when-cross-origin',
+        },
+    };
+};
+
+/**
  * Setup Express application
  * @description Configures Express middleware and base routes
  * @param {object} app - Express application instance
@@ -65,15 +104,15 @@ const getCorsOptions = () => {
 const setupExpress = (app) => {
     const envConfig = getEnvironmentConfig();
     const corsOptions = getCorsOptions();
+    const helmetConfig = getHelmetConfig();
 
     app.use(cors(corsOptions));
 
-    app.use(
-        helmet({
-            crossOriginResourcePolicy: { policy: 'cross-origin' },
-            crossOriginEmbedderPolicy: false,
-        }),
-    );
+    app.use(helmet(helmetConfig));
+
+    if (envConfig.nodeEnv === 'production') {
+        app.use(compression());
+    }
 
     if (envConfig.nodeEnv !== 'production') {
         app.use(morgan('dev'));
@@ -81,8 +120,8 @@ const setupExpress = (app) => {
         app.use(morgan('combined'));
     }
 
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
+    app.use(express.json({ limit: '10mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
     if (envConfig.enableSwagger) {
         swaggerDocs(app);
