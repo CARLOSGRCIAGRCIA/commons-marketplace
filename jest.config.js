@@ -1,4 +1,9 @@
 export default {
+    testPathIgnorePatterns: [
+        '/node_modules/',
+        '/test/e2e/',
+        '/test/integration/',
+    ],
     collectCoverage: true,
     collectCoverageFrom: [
         'src/**/*.{js,ts}',
@@ -17,10 +22,10 @@ export default {
     coverageReporters: ['text', 'lcov', 'cobertura'],
     coverageThreshold: {
         global: {
-            branches: 1,
-            functions: 0.8,
-            lines: 1,
-            statements: 1,
+            branches: 68,
+            functions: 69,
+            lines: 78,
+            statements: 78,
         },
     },
     setupFilesAfterEnv: ['<rootDir>/test/setup.js'],

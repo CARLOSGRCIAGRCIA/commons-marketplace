@@ -34,6 +34,9 @@ jest.mock('../src/infrastructure/cache/cacheManager.js', () => ({
         set: jest.fn().mockReturnValue(true),
         del: jest.fn().mockReturnValue(true),
         delPattern: jest.fn().mockReturnValue(0),
+        flushAll: jest.fn(),
+        has: jest.fn().mockReturnValue(false),
+        getStats: jest.fn().mockReturnValue({ hits: 0, misses: 0 }),
     },
     CACHE_TTL: {
         CATEGORIES: 1,
@@ -46,6 +49,7 @@ jest.mock('../src/infrastructure/cache/cacheManager.js', () => ({
         SUBCATEGORIES: 'categories:sub:',
     },
     invalidateCache: jest.fn(),
+    getCachedOrFetch: jest.fn(),
 }));
 
 jest.mock('../src/infrastructure/logger/logger.js', () => ({
