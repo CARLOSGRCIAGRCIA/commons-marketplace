@@ -103,8 +103,8 @@ export class CircuitBreaker {
     }
 
     /**
-     * Get circuit status
-     * @returns {object}
+     * Get circuit status.
+     * @returns {object} Status object
      */
     getStatus() {
         return {
@@ -118,7 +118,7 @@ export class CircuitBreaker {
     }
 
     /**
-     * Reset circuit
+     * Reset circuit.
      */
     reset() {
         this.state = CircuitState.CLOSED;
@@ -134,6 +134,9 @@ export class CircuitBreaker {
  * @class
  */
 export class CircuitBreakerRegistry {
+    /**
+     * Creates a new CircuitBreakerRegistry instance.
+     */
     constructor() {
         this.circuits = new Map();
     }
@@ -142,7 +145,7 @@ export class CircuitBreakerRegistry {
      * Get or create circuit breaker.
      * @param {string} name - Circuit name
      * @param {object} options - Options
-     * @returns {CircuitBreaker}
+     * @returns {CircuitBreaker} Circuit breaker instance
      */
     getOrCreate(name, options) {
         if (!this.circuits.has(name)) {
@@ -152,15 +155,16 @@ export class CircuitBreakerRegistry {
     }
 
     /**
-     * Get all circuit statuses
-     * @returns {object[]}
+     * Get all circuit statuses.
+     * @returns {object[]} Array of circuit statuses
      */
     getAllStatus() {
         return Array.from(this.circuits.values()).map((cb) => cb.getStatus());
     }
 
     /**
-     * Reset all circuits
+     * Reset all circuits.
+     * @returns {void}
      */
     resetAll() {
         this.circuits.forEach((cb) => cb.reset());

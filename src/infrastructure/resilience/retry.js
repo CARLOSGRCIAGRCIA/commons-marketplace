@@ -78,6 +78,9 @@ export const retryable = (fn, options = {}) => {
  * @class
  */
 export class RetryOptions {
+    /**
+     * Creates a new RetryOptions instance.
+     */
     constructor() {
         this.maxRetries = DEFAULT_RETRY_OPTS.maxRetries;
         this.retryDelay = DEFAULT_RETRY_OPTS.retryDelay;
@@ -89,9 +92,9 @@ export class RetryOptions {
     }
 
     /**
-     * Set max retries
+     * Set max retries.
      * @param {number} maxRetries - Max retries
-     * @returns {RetryOptions}
+     * @returns {RetryOptions} RetryOptions instance
      */
     withMaxRetries(maxRetries) {
         this.maxRetries = maxRetries;
@@ -99,9 +102,9 @@ export class RetryOptions {
     }
 
     /**
-     * Set base retry delay
+     * Set base retry delay.
      * @param {number} retryDelay - Base delay in ms
-     * @returns {RetryOptions}
+     * @returns {RetryOptions} RetryOptions instance
      */
     withRetryDelay(retryDelay) {
         this.retryDelay = retryDelay;
@@ -109,9 +112,9 @@ export class RetryOptions {
     }
 
     /**
-     * Set exponential backoff
+     * Set exponential backoff.
      * @param {number} multiplier - Backoff multiplier
-     * @returns {RetryOptions}
+     * @returns {RetryOptions} RetryOptions instance
      */
     withBackoff(multiplier) {
         this.backoffMultiplier = multiplier;
@@ -119,9 +122,9 @@ export class RetryOptions {
     }
 
     /**
-     * Custom retry predicate
+     * Custom retry predicate.
      * @param {Function} predicate - Retry predicate
-     * @returns {RetryOptions}
+     * @returns {RetryOptions} RetryOptions instance
      */
     retryWhen(predicate) {
         this.retryOn.any = predicate;
@@ -129,8 +132,8 @@ export class RetryOptions {
     }
 
     /**
-     * Build retry options
-     * @returns {object}
+     * Build retry options.
+     * @returns {object} Built options
      */
     build() {
         return {

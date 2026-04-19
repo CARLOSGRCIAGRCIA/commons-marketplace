@@ -6,8 +6,8 @@ import supabase from '../supabase/config/supabaseClient.js';
  */
 export class HealthCheck {
     /**
-     * Check MongoDB connection
-     * @returns {Promise<{status: string, latency?: number}>}
+     * Check MongoDB connection.
+     * @returns {Promise<{status: string, latency?: number}>} Health status
      */
     static async checkMongoDB() {
         const start = Date.now();
@@ -25,8 +25,8 @@ export class HealthCheck {
     }
 
     /**
-     * Check Supabase connection
-     * @returns {Promise<{status: string, latency?: number}>}
+     * Check Supabase connection.
+     * @returns {Promise<{status: string, latency?: number}>} Health status
      */
     static async checkSupabase() {
         if (!supabase) {
