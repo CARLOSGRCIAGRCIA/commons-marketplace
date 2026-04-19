@@ -52,6 +52,32 @@ jest.mock('../src/infrastructure/cache/cacheManager.js', () => ({
     getCachedOrFetch: jest.fn(),
 }));
 
+jest.mock('../src/infrastructure/resilience/circuitBreaker.js', () => ({
+    __esModule: true,
+    CircuitBreaker: jest.fn().mockImplementation(() => ({
+        execute: jest.fn(),
+        getStatus: jest.fn().mockReturnValue({ state: 'closed', failures: 0 }),
+    })),
+    CircuitBreakerRegistry: jest.fn(),
+    circuitRegistry: {
+        getOrCreate: jest.fn(),
+        getAllStatus: jest.fn().mockReturnValue([]),
+        resetAll: jest.fn(),
+    },
+}));
+
+jest.mock('../src/infrastructure/services/healthCheck.js', () => ({
+    __esModule: true,
+    HealthCheck: {
+        checkAll: jest.fn().mockResolvedValue({
+            status: 'healthy',
+            timestamp: new Date().toISOString(),
+            uptime: 0,
+            checks: { mongodb: { status: 'healthy' }, supabase: { status: 'healthy' } },
+        }),
+    },
+}));
+
 jest.mock('../src/infrastructure/logger/logger.js', () => ({
     log: {
         error: jest.fn(),

@@ -6,6 +6,7 @@ import multer from 'multer';
 import compression from 'compression';
 import { swaggerDocs } from '../swagger/swagger.config.js';
 import { getEnvironmentConfig } from '../../config/environment.js';
+import { HealthCheck } from '../services/healthCheck.js';
 
 const storage = multer.memoryStorage();
 
@@ -130,15 +131,16 @@ const setupExpress = (app) => {
         swaggerDocs(app);
     }
 
-    app.get('/health', (req, res) => {
-        res.status(200).json({
-            status: 'OK',
-            timestamp: new Date().toISOString(),
+    app.get('/health', async (req, res) => {
+        const health = await HealthCheck.checkAll();
+        const statusCode = health.status === 'healthy' ? 200 : 503;
+        res.status(statusCode).json({
+            status: health.status,
+            timestamp: health.timestamp,
+            uptime: health.uptime,
             environment: envConfig.nodeEnv,
             service: 'commons-marketplace',
-            supabase: 'connected',
-            mongodb: 'connected',
-            ably: envConfig.ablyApiKey ? 'configured' : 'not configured',
+            checks: health.checks,
         });
     });
 

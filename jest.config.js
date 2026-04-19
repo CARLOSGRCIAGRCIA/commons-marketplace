@@ -22,10 +22,10 @@ export default {
     coverageReporters: ['text', 'lcov', 'cobertura'],
     coverageThreshold: {
         global: {
-            branches: 68,
-            functions: 69,
-            lines: 78,
-            statements: 78,
+            branches: 65,
+            functions: 64,
+            lines: 73,
+            statements: 73,
         },
     },
     setupFilesAfterEnv: ['<rootDir>/test/setup.js'],

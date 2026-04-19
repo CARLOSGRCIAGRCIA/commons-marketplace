@@ -1,4 +1,11 @@
 import winston from 'winston';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const levels = {
     error: 0,
@@ -18,42 +25,63 @@ const colors = {
 
 winston.addColors(colors);
 
-const format = winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
+const logDir = process.env.LOG_DIR || path.join(__dirname, '../../logs');
+
+if (!fs.existsSync(logDir) && process.env.NODE_ENV !== 'test') {
+    fs.mkdirSync(logDir, { recursive: true });
+}
+
+const fileFormat = winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.json(),
+);
+
+const consoleFormat = winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     winston.format.colorize({ all: true }),
     winston.format.printf((info) => {
         const { timestamp, level, message, ...metadata } = info;
         let msg = `${timestamp} [${level}]: ${message}`;
-
         if (Object.keys(metadata).length > 0) {
             msg += ` ${JSON.stringify(metadata)}`;
         }
-
         return msg;
     }),
 );
 
-const transports = [new winston.transports.Console()];
+const transports = [new winston.transports.Console({ format: consoleFormat })];
 
 if (process.env.NODE_ENV !== 'test') {
     transports.push(
         new winston.transports.File({
-            filename: 'logs/error.log',
+            filename: path.join(logDir, 'error.log'),
             level: 'error',
-            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+            maxsize: 5242880,
+            maxFiles: 5,
+            format: fileFormat,
         }),
 
         new winston.transports.File({
-            filename: 'logs/combined.log',
-            format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+            filename: path.join(logDir, 'combined.log'),
+            maxsize: 5242880,
+            maxFiles: 5,
+            format: fileFormat,
+        }),
+
+        new winston.transports.File({
+            filename: path.join(logDir, 'http.log'),
+            level: 'http',
+            maxsize: 5242880,
+            maxFiles: 3,
+            format: fileFormat,
         }),
     );
 }
 
 const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'test' ? 'error' : 'debug'),
+    level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'test' ? 'error' : 'info'),
     levels,
-    format,
+    format: consoleFormat,
     transports,
     silent: process.env.NODE_ENV === 'test',
     exitOnError: false,
