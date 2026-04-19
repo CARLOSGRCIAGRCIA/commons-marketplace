@@ -13,12 +13,16 @@ dotenv.config();
  * If the required environment variables are missing, the process terminates
  * to prevent runtime connection issues.
  */
+const isTest = process.env.NODE_ENV === 'test';
+
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
     log.error('FATAL ERROR: Missing Supabase environment variables', {
         hasUrl: !!process.env.SUPABASE_URL,
         hasAnonKey: !!process.env.SUPABASE_ANON_KEY,
     });
-    process.exit(1);
+    if (!isTest) {
+        process.exit(1);
+    }
 }
 
 /**
@@ -26,13 +30,15 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
  * @constant
  * @type {import('@supabase/supabase-js').SupabaseClient}
  */
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-    auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false,
-    },
-});
+const supabase = isTest
+    ? null
+    : createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+          auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false,
+          },
+      });
 
 log.info('Supabase client initialized successfully');
 
@@ -41,17 +47,19 @@ log.info('Supabase client initialized successfully');
  * @constant
  * @type {import('@supabase/supabase-js').SupabaseClient}
  */
-const supabaseAdmin = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
-    {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false,
-        },
-    },
-);
+const supabaseAdmin = isTest
+    ? null
+    : createClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
+          {
+              auth: {
+                  persistSession: false,
+                  autoRefreshToken: false,
+                  detectSessionInUrl: false,
+              },
+          },
+      );
 
 log.info('Supabase admin client initialized successfully', {
     hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
