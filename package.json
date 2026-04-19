@@ -61,6 +61,7 @@
         "winston": "^3.18.3"
     },
     "devDependencies": {
+        "@playwright/test": "^1.59.1",
         "@types/ably": "^1.0.0",
         "supertest": "^7.1.4"
     }
