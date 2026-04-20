@@ -60,7 +60,6 @@ describe('UpdateSellerRequestStatusUseCase', () => {
         });
         expect(userRepository.updateById).toHaveBeenCalledWith('user123', {
             role: 'seller',
-            isApprovedSeller: true,
         });
         expect(authRepository.updateUserMetadata).toHaveBeenCalledWith('user123', {
             role: 'Seller',

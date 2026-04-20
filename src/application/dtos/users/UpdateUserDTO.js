@@ -5,7 +5,6 @@ export const UpdateUserDTO = {
         phoneNumber: data.phoneNumber !== undefined ? data.phoneNumber : undefined,
         address: data.address !== undefined ? data.address : undefined,
         profilePicUrl: data.profilePicUrl !== undefined ? data.profilePicUrl : undefined,
-        isApprovedSeller: data.isApprovedSeller !== undefined ? data.isApprovedSeller : undefined,
     }),
 
     validate: (dto) => {
@@ -15,7 +14,6 @@ export const UpdateUserDTO = {
             'phoneNumber',
             'address',
             'profilePicUrl',
-            'isApprovedSeller',
         ];
         const providedFields = Object.keys(dto).filter((key) => dto[key] !== undefined);
         const hasValidFields = providedFields.some((field) => allowedFields.includes(field));

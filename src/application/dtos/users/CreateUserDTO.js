@@ -6,7 +6,6 @@ export const CreateUserDTO = {
         phoneNumber: data.phoneNumber ?? null,
         address: data.address ?? null,
         profilePicUrl: data.profilePicUrl ?? null,
-        isApprovedSeller: data.isApprovedSeller ?? false,
         email: data.email ?? null,
     }),
 
