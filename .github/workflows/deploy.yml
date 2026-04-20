@@ -16,8 +16,19 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Trigger deploy on Render
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         run: |
-          curl -s "${{ secrets.RENDER_DEPLOY_HOOK }}" \
-            -o response.json \
-            -w "\nHTTP Status: %{http_code}\n"
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "ERROR: RENDER_DEPLOY_HOOK secret is empty or not set"
+            exit 1
+          fi
+          echo "Triggering Render deploy..."
+          HTTP_STATUS=$(curl -s -o response.json -w "%{http_code}" "$DEPLOY_HOOK")
+          echo "HTTP Status: $HTTP_STATUS"
           cat response.json
+          if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "201" ]; then
+            echo "Deploy hook failed with status $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Deploy triggered successfully!"
