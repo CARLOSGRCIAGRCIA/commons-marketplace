@@ -33,6 +33,8 @@ describe('CreateStoreDTO Tests', () => {
             storeName: 'My Test Store',
             description: '',
             logo: null,
+            categoryIds: [],
+            productCount: 0,
         });
         expect(Object.isFrozen(dto)).toBe(true);
     });
