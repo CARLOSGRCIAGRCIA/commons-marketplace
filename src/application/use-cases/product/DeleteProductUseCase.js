@@ -5,10 +5,11 @@ import { log } from '../../../infrastructure/logger/logger.js';
 /**
  * Use case for deleting a product and its associated images.
  * @param {object} productRepository - The repository for product data.
+ * @param {object} storeRepository - The repository for store data.
  * @returns {Function} A function to execute the use case.
  */
 export const deleteProductUseCase =
-    (productRepository) =>
+    (productRepository, storeRepository) =>
     /**
      * Executes the delete product use case.
      * @param {string} productId - The ID of the product to delete.
@@ -23,6 +24,8 @@ export const deleteProductUseCase =
                 log.warn('Product not found for deletion', { productId });
                 return null;
             }
+
+            const storeId = product.storeId;
 
             log.debug('Product found, proceeding with image deletion', {
                 productId,
@@ -60,6 +63,11 @@ export const deleteProductUseCase =
             }
 
             const deletedProduct = await productRepository.deleteById(productId);
+
+            if (storeId) {
+                await storeRepository.decrementProductCount(storeId);
+            }
+
             log.info('Product deleted successfully', {
                 productId,
                 productName: deletedProduct.name,
