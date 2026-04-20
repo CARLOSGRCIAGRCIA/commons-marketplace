@@ -70,6 +70,18 @@ export const createProductUseCase =
                 );
             }
 
+            const categoryIds = store.categoryIds?.map(id => id.toString()) || [];
+            if (categoryIds.length > 0 && !categoryIds.includes(productData.categoryId.toString())) {
+                log.warn('Product category not allowed for store', {
+                    storeId: productData.storeId,
+                    productCategory: productData.categoryId,
+                    storeCategories: categoryIds,
+                });
+                throw new Error(
+                    'This category is not allowed for this store. Please select a category from the store\'s allowed categories.',
+                );
+            }
+
             log.debug('Validating category', { categoryId: productData.categoryId });
             const category = await categoryRepository.findById(productData.categoryId);
             if (!category || !category.isActive) {
@@ -78,7 +90,6 @@ export const createProductUseCase =
             }
 
             let subCategory = null;
-            let subCategoryName = null;
 
             if (productData.subCategoryId) {
                 log.debug('Validating subcategory', { subCategoryId: productData.subCategoryId });
@@ -98,8 +109,6 @@ export const createProductUseCase =
                     });
                     throw new Error('Subcategory does not belong to the selected category.');
                 }
-
-                subCategoryName = subCategory.name;
             }
 
             log.debug('Uploading main image');
@@ -120,9 +129,7 @@ export const createProductUseCase =
 
             const productDataWithImages = {
                 ...productData,
-                categoryName: category.name,
                 subCategoryId: productData.subCategoryId || null,
-                subCategoryName: subCategoryName || null,
                 mainImageUrl,
                 imageUrls,
             };
@@ -130,6 +137,8 @@ export const createProductUseCase =
             log.debug('Creating product in repository');
             const createProductDTO = createCreateProductDTO(productDataWithImages);
             const newProduct = await productRepository.create(createProductDTO);
+
+            await storeRepository.incrementProductCount(productData.storeId);
 
             log.info('Product created successfully', {
                 productId: newProduct.id,
