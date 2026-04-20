@@ -6,6 +6,8 @@
  * @property {string} description - The store's description.
  * @property {string|null} logo - The store's logo URL.
  * @property {string} status - The current status of the store.
+ * @property {string[]} categoryIds - Array of category IDs the store sells.
+ * @property {number} productCount - Number of products in the store.
  * @property {string} createdAt - Store creation timestamp.
  * @property {string} updatedAt - Store last update timestamp.
  */
@@ -25,6 +27,8 @@ export function createStoreResponseDTO(store) {
         description: store.description,
         logo: store.logo || null,
         status: store.status,
+        categoryIds: store.categoryIds || [],
+        productCount: store.productCount || 0,
         createdAt: store.createdAt,
         updatedAt: store.updatedAt,
     };

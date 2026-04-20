@@ -9,6 +9,7 @@
  * @property {string|null} subCategoryId - The ID of the sub-category.
  * @property {string} sellerId - The ID of the seller publishing this product.
  * @property {string} storeId - The ID of the store this product belongs to.
+ * @property {object} store - Basic store info (id, storeName).
  * @property {string} mainImageUrl - The URL of the main product image.
  * @property {string[]} imageUrls - Array of additional product images.
  * @property {string} status - The current status of the product.
@@ -19,9 +20,11 @@
 /**
  * Factory function to create a ProductResponseDTO from a database object.
  * @param {object} product - The product object from the database.
+ * @param {object} [options] - Optional includes.
+ * @param {boolean} options.includeStore - Include basic store info.
  * @returns {ProductResponseDTO | null} The formatted DTO for the product, or null if the input product is falsy.
  */
-export function createProductResponseDTO(product) {
+export function createProductResponseDTO(product, options = {}) {
     if (!product) return null;
 
     const dto = {
@@ -34,6 +37,12 @@ export function createProductResponseDTO(product) {
         subCategoryId: product.subCategoryId || null,
         sellerId: product.sellerId,
         storeId: product.storeId,
+        ...(options.includeStore && product.storeName ? {
+            store: {
+                id: product.storeId,
+                storeName: product.storeName,
+            },
+        } : {}),
         mainImageUrl: product.mainImageUrl,
         imageUrls: product.imageUrls || [],
         status: product.status,
