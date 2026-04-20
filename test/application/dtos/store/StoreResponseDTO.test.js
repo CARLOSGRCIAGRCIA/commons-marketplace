@@ -9,6 +9,8 @@ describe('StoreResponseDTO Tests', () => {
             description: 'A test store description',
             logo: 'https://example.com/logo.jpg',
             status: 'Approved',
+            categoryIds: [],
+            productCount: 0,
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z',
         };
@@ -22,6 +24,8 @@ describe('StoreResponseDTO Tests', () => {
             description: 'A test store description',
             logo: 'https://example.com/logo.jpg',
             status: 'Approved',
+            categoryIds: [],
+            productCount: 0,
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z',
         });
@@ -36,6 +40,8 @@ describe('StoreResponseDTO Tests', () => {
             description: 'A test store description',
             logo: 'https://example.com/logo.jpg',
             status: 'Pending',
+            categoryIds: [],
+            productCount: 0,
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z',
         };
@@ -49,6 +55,8 @@ describe('StoreResponseDTO Tests', () => {
             description: 'A test store description',
             logo: 'https://example.com/logo.jpg',
             status: 'Pending',
+            categoryIds: [],
+            productCount: 0,
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z',
         });
@@ -125,6 +133,8 @@ describe('StoreResponseDTO Tests', () => {
             description: undefined,
             logo: null,
             status: 'Approved',
+            categoryIds: [],
+            productCount: 0,
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z',
         });
@@ -137,6 +147,8 @@ describe('StoreResponseDTO Tests', () => {
             userId: 'user123',
             storeName: 'My Test Store',
             status: 'Approved',
+            categoryIds: [],
+            productCount: 0,
             createdAt: '2023-01-01T00:00:00.000Z',
             updatedAt: '2023-01-02T00:00:00.000Z',
         };
