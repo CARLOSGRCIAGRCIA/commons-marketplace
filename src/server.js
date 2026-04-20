@@ -20,7 +20,7 @@ const startServer = async () => {
             logger.info('╔══════════════════════════════════════════════════════════════════╗');
             logger.info('║                                                                  ║');
             logger.info(
-                '║     CommonMarketplace API Server Started                               ║',
+                '║     CommonMarketplace API Server Started on server                       ║',
             );
             logger.info('║                                                                  ║');
             logger.info(
