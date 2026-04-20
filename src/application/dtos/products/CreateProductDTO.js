@@ -5,9 +5,7 @@
  * @property {number} price - The product price.
  * @property {number} stock - The available quantity.
  * @property {string} categoryId - The ID of the category this product belongs to.
- * @property {string} categoryName - The name of the category (automatically populated).
  * @property {string} [subCategoryId] - The ID of the sub-category.
- * @property {string} [subCategoryName] - The name of the sub-category (automatically populated).
  * @property {string} sellerId - The ID of the seller publishing this product.
  * @property {string} storeId - The ID of the store this product belongs to.
  * @property {string} mainImageUrl - The URL of the main product image.
@@ -22,9 +20,7 @@
  * @param {number} data.price - The product price.
  * @param {number} data.stock - The available quantity.
  * @param {string} data.categoryId - The ID of the category this product belongs to.
- * @param {string} data.categoryName - The name of the category (automatically populated).
  * @param {string} [data.subCategoryId] - The ID of the sub-category.
- * @param {string} [data.subCategoryName] - The name of the sub-category (automatically populated).
  * @param {string} data.sellerId - The ID of the seller publishing this product.
  * @param {string} data.storeId - The ID of the store this product belongs to.
  * @param {string} data.mainImageUrl - The URL of the main product image.
@@ -37,9 +33,7 @@ export function createCreateProductDTO({
     price,
     stock,
     categoryId,
-    categoryName,
     subCategoryId,
-    subCategoryName,
     sellerId,
     storeId,
     mainImageUrl,
@@ -50,13 +44,12 @@ export function createCreateProductDTO({
         price == null ||
         stock == null ||
         !categoryId ||
-        !categoryName ||
         !sellerId ||
         !storeId ||
         !mainImageUrl
     ) {
         throw new Error(
-            'Missing required fields for creating a product. All fields including categoryId, categoryName, and storeId are required.',
+            'Missing required fields for creating a product. categoryId, sellerId, storeId, and mainImageUrl are required.',
         );
     }
 
@@ -66,9 +59,7 @@ export function createCreateProductDTO({
         price,
         stock,
         categoryId,
-        categoryName,
         subCategoryId: subCategoryId || null,
-        subCategoryName: subCategoryName || null,
         sellerId,
         storeId,
         mainImageUrl,
