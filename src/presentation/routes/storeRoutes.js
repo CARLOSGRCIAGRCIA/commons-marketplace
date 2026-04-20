@@ -45,6 +45,20 @@ export function createStoreRoutes(storeController, canModifyStore) {
      * @returns {void}
      */
     router.get('/:id', (req, res, next) => storeController.getStoreById(req, res, next));
+
+    /**
+     * @route   GET /api/stores/:id/categories
+     * @desc    Get categories for a store with product counts (public).
+     * @access  public
+     * @param {object} req - The Express request object.
+     * @param {object} res - The Express response object.
+     * @param {Function} next - The Express next middleware function.
+     * @returns {void}
+     */
+    router.get('/:id/categories', (req, res, next) =>
+        storeController.getStoreCategories(req, res, next),
+    );
+
     /**
      * @route   GET /api/stores/me
      * @desc    Get all stores owned by the authenticated user.

@@ -8,3 +8,4 @@ export { getPendingStoresUseCase } from './GetPendingStoresUseCase.js';
 export { getStoresByStatusUseCase } from './GetStoresByStatusUseCase.js';
 export { updateStoreStatusUseCase } from './UpdateStoreStatusUseCase.js';
 export { getStoreByIdUseCase } from './GetStoreByIdUseCase.js';
+export { getStoreCategoriesUseCase } from './GetStoreCategoriesUseCase.js';

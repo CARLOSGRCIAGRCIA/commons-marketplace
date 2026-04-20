@@ -50,6 +50,9 @@ export const createReviewController = (dependencies) => {
                 const filters = {
                     ...(req.query.userId && { userId: req.query.userId }),
                     ...(req.query.score && { score: parseInt(req.query.score) }),
+                    ...(req.query.type && { type: req.query.type }),
+                    ...(req.query.productId && { productId: req.query.productId }),
+                    ...(req.query.storeId && { storeId: req.query.storeId }),
                 };
 
                 const reviews = await getAllReviewsUC(filters);
