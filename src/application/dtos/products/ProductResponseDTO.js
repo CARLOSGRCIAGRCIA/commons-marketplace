@@ -6,9 +6,7 @@
  * @property {number} price - The product price.
  * @property {number} stock - The available quantity.
  * @property {string} categoryId - The ID of the category this product belongs to.
- * @property {string} categoryName - The name of the category.
  * @property {string|null} subCategoryId - The ID of the sub-category.
- * @property {string|null} subCategoryName - The name of the sub-category.
  * @property {string} sellerId - The ID of the seller publishing this product.
  * @property {string} storeId - The ID of the store this product belongs to.
  * @property {string} mainImageUrl - The URL of the main product image.
@@ -33,9 +31,7 @@ export function createProductResponseDTO(product) {
         price: product.price,
         stock: product.stock,
         categoryId: product.categoryId,
-        categoryName: product.categoryName,
         subCategoryId: product.subCategoryId || null,
-        subCategoryName: product.subCategoryName || null,
         sellerId: product.sellerId,
         storeId: product.storeId,
         mainImageUrl: product.mainImageUrl,

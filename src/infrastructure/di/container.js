@@ -147,23 +147,23 @@ export const createContainer = () => {
     const getAllProductsUC = getAllProductsUseCase(productRepo);
     const getProductByIdUC = getProductByIdUseCase(productRepo);
     const updateProductUC = updateProductUseCase(productRepo, categoryRepo);
-    const deleteProductUC = deleteProductUseCase(productRepo);
+    const deleteProductUC = deleteProductUseCase(productRepo, storeRepo);
     const getStoreProductsUC = getStoreProductsUseCase(productRepo, storeRepo);
 
     // Store
-    const createStoreUC = createStoreUseCase(storeRepo, fileService);
+    const createStoreUC = createStoreUseCase(storeRepo, userRepo, categoryRepo, fileService);
     const getStoreByUserIdUC = getStoreByUserIdUseCase(storeRepo);
     const getStoreByIdUC = getStoreByIdUseCase(storeRepo);
     const getMyStoresUC = getMyStoresUseCase(storeRepo);
     const getAllStoresUC = getAllStoresUseCase(storeRepo);
-    const updateStoreUC = updateStoreUseCase(storeRepo, fileService);
+    const updateStoreUC = updateStoreUseCase(storeRepo, categoryRepo, fileService);
     const deleteStoreUC = deleteStoreUseCase(storeRepo, fileService);
     const getPendingStoresUC = getPendingStoresUseCase(storeRepo);
     const getStoresByStatusUC = getStoresByStatusUseCase(storeRepo);
     const updateStoreStatusUC = updateStoreStatusUseCase(storeRepo);
 
     // Review
-    const createReviewUC = createReviewUseCase(reviewRepo, userRepo);
+    const createReviewUC = createReviewUseCase(reviewRepo, userRepo, productRepo, storeRepo);
     const getAllReviewsUC = getAllReviewsUseCase(reviewRepo);
     const getReviewByIdUC = getReviewByIdUseCase(reviewRepo);
     const updateReviewUC = updateReviewUseCase(reviewRepo);

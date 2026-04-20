@@ -19,6 +19,7 @@ describe('CreateProductUseCase Tests', () => {
         };
         storeRepository = {
             findById: jest.fn(),
+            incrementProductCount: jest.fn(),
         };
         categoryRepository = {
             findById: jest.fn(),
@@ -45,14 +46,13 @@ describe('CreateProductUseCase Tests', () => {
             id: '1',
             mainImageUrl: 'https://example.com/main.jpg',
             imageUrls: [],
-            categoryName: 'Electronics',
-            subCategoryName: null,
         };
 
         const mockStore = {
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: [],
         };
 
         const mockCategory = {
@@ -70,6 +70,7 @@ describe('CreateProductUseCase Tests', () => {
 
         expect(storeRepository.findById).toHaveBeenCalledWith('store1');
         expect(categoryRepository.findById).toHaveBeenCalledWith('cat1');
+        expect(storeRepository.incrementProductCount).toHaveBeenCalledWith('store1');
         expect(uploadImage).toHaveBeenCalledWith(mainImageFile, {
             folder: 'products',
             prefix: 'main',

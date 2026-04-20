@@ -14,6 +14,9 @@ describe('GetAllReviewsUseCase', () => {
             {
                 id: 'review1',
                 userId: 'user1',
+                type: 'product',
+                productId: 'product1',
+                storeId: null,
                 commentary: 'Great product!',
                 score: 5,
                 createdAt: new Date(),
@@ -22,6 +25,9 @@ describe('GetAllReviewsUseCase', () => {
             {
                 id: 'review2',
                 userId: 'user2',
+                type: 'store',
+                productId: null,
+                storeId: 'store1',
                 commentary: 'Good value for money',
                 score: 4,
                 createdAt: new Date(),
@@ -39,11 +45,14 @@ describe('GetAllReviewsUseCase', () => {
     });
 
     it('should return reviews with filters applied', async () => {
-        const filters = { userId: 'user123', score: 5 };
+        const filters = { userId: 'user123', type: 'product' };
         const reviews = [
             {
                 id: 'review1',
                 userId: 'user123',
+                type: 'product',
+                productId: 'product1',
+                storeId: null,
                 commentary: 'Great product!',
                 score: 5,
                 createdAt: new Date(),

@@ -13,6 +13,9 @@ describe('GetReviewByIdUseCase', () => {
         const review = {
             id: 'review123',
             userId: 'user123',
+            type: 'product',
+            productId: 'product123',
+            storeId: null,
             commentary: 'Great product!',
             score: 5,
             createdAt: new Date(),

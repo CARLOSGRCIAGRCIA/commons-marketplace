@@ -6,6 +6,7 @@ import {
 import { log } from '../../../../src/infrastructure/logger/logger.js';
 describe('UpdateStoreUseCase Tests', () => {
     let storeRepository;
+    let categoryRepository;
     let fileService;
     let useCase;
 
@@ -14,11 +15,14 @@ describe('UpdateStoreUseCase Tests', () => {
             findById: jest.fn(),
             updateById: jest.fn(),
         };
+        categoryRepository = {
+            findById: jest.fn(),
+        };
         fileService = {
             uploadImage: jest.fn(),
             deleteImage: jest.fn(),
         };
-        useCase = updateStoreUseCase(storeRepository, fileService);
+        useCase = updateStoreUseCase(storeRepository, categoryRepository, fileService);
     });
 
     it('should update store successfully without new logo', async () => {

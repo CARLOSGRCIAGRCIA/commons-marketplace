@@ -16,6 +16,8 @@ describe('CreateStoreDTO Tests', () => {
             storeName: 'My Test Store',
             description: 'A test store description',
             logo: 'https://example.com/logo.jpg',
+            categoryIds: [],
+            productCount: 0,
         });
         expect(Object.isFrozen(dto)).toBe(true);
     });
@@ -33,6 +35,8 @@ describe('CreateStoreDTO Tests', () => {
             storeName: 'My Test Store',
             description: '',
             logo: null,
+            categoryIds: [],
+            productCount: 0,
         });
         expect(Object.isFrozen(dto)).toBe(true);
     });
