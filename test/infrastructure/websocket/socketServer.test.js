@@ -42,6 +42,10 @@ describe('WebSocketServer', () => {
         it('should initialize connectedUsers as empty Map', () => {
             expect(webSocketServer.connectedUsers).toBeInstanceOf(Map);
         });
+
+        it('should setup connection handler', () => {
+            expect(webSocketServer.io.on).toHaveBeenCalled();
+        });
     });
 
     describe('emitToUser', () => {
