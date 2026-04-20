@@ -20,6 +20,7 @@ describe('GetAllProductsUseCase Tests', () => {
                 {
                     id: '1',
                     name: 'Product 1',
+                    description: 'Description 1',
                     price: 10,
                     stock: 5,
                     categoryId: 'cat1',
@@ -33,6 +34,7 @@ describe('GetAllProductsUseCase Tests', () => {
                 {
                     id: '2',
                     name: 'Product 2',
+                    description: 'Description 2',
                     price: 20,
                     stock: 10,
                     categoryId: 'cat2',
@@ -63,12 +65,11 @@ describe('GetAllProductsUseCase Tests', () => {
                 {
                     id: '1',
                     name: 'Product 1',
+                    description: 'Description 1',
                     price: 10,
                     stock: 5,
                     categoryId: 'cat1',
-                    categoryName: undefined,
                     subCategoryId: null,
-                    subCategoryName: null,
                     sellerId: 'seller1',
                     storeId: 'store1',
                     mainImageUrl: 'img1.jpg',
@@ -80,12 +81,11 @@ describe('GetAllProductsUseCase Tests', () => {
                 {
                     id: '2',
                     name: 'Product 2',
+                    description: 'Description 2',
                     price: 20,
                     stock: 10,
                     categoryId: 'cat2',
-                    categoryName: undefined,
                     subCategoryId: null,
-                    subCategoryName: null,
                     sellerId: 'seller2',
                     storeId: 'store2',
                     mainImageUrl: 'img2.jpg',

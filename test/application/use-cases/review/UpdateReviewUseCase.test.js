@@ -14,6 +14,9 @@ describe('UpdateReviewUseCase', () => {
         const existingReview = {
             id: 'review123',
             userId: 'user123',
+            type: 'product',
+            productId: 'product123',
+            storeId: null,
             commentary: 'Good product',
             score: 4,
             createdAt: new Date(),
@@ -23,6 +26,9 @@ describe('UpdateReviewUseCase', () => {
         const updatedReview = {
             id: 'review123',
             userId: 'user123',
+            type: 'product',
+            productId: 'product123',
+            storeId: null,
             commentary: 'Great product!',
             score: 5,
             createdAt: new Date(),
