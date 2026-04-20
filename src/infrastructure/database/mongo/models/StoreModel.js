@@ -29,6 +29,27 @@ const storeSchema = new mongoose.Schema(
             enum: ['Pending', 'Approved', 'Rejected', 'Suspended'],
             default: 'Pending',
         },
+        categoryIds: {
+            type: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Category',
+            }],
+            default: [],
+            validate: {
+                validator: function(v) {
+                    return v.length <= 5;
+                },
+                message: 'A store can have a maximum of 5 categories',
+            },
+        },
+        allowedMainCategories: {
+            type: [String],
+            default: [],
+        },
+        productCount: {
+            type: Number,
+            default: 0,
+        },
     },
     {
         timestamps: true,
@@ -37,6 +58,8 @@ const storeSchema = new mongoose.Schema(
 
 storeSchema.index({ userId: 1 });
 storeSchema.index({ userId: 1, storeName: 1 }, { unique: true });
+storeSchema.index({ categoryIds: 1 });
+storeSchema.index({ status: 1 });
 
 const StoreModel = mongoose.model('Store', storeSchema);
 export default StoreModel;

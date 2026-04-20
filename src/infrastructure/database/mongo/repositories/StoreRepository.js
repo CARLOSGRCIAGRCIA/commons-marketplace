@@ -62,4 +62,33 @@ export const StoreRepositoryImpl = {
     async countByStatus(status) {
         return await StoreModel.countDocuments({ status });
     },
+
+    async findByCategoryId(categoryId) {
+        return await StoreModel.find({
+            categoryIds: categoryId,
+            status: 'Approved',
+        }).lean();
+    },
+
+    async findAllWithCategory(categoryId) {
+        return await StoreModel.find({
+            categoryIds: categoryId,
+        }).sort({ createdAt: -1 }).lean();
+    },
+
+    async incrementProductCount(storeId) {
+        return await StoreModel.findByIdAndUpdate(
+            storeId,
+            { $inc: { productCount: 1 } },
+            { new: true }
+        ).lean();
+    },
+
+    async decrementProductCount(storeId) {
+        return await StoreModel.findByIdAndUpdate(
+            storeId,
+            { $inc: { productCount: -1 } },
+            { new: true }
+        ).lean();
+    },
 };
