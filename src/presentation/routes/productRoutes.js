@@ -49,6 +49,17 @@ export function createProductRoutes(productController, canModifyProduct) {
     router.get('/:id', (req, res, next) => productController.getProductById(req, res, next));
 
     /**
+     * Get related products.
+     * @route GET /api/products/:id/related
+     * @access public
+     * @param {string} req.params.id - The product ID
+     * @param {string} req.query.limit - Max products to return
+     */
+    router.get('/:id/related', (req, res, next) =>
+        productController.getRelatedProducts(req, res, next),
+    );
+
+    /**
      * Create a new product (seller only, must be associated with an approved store).
      * @route POST /api/products
      * @access private

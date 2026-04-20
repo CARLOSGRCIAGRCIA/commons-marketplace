@@ -240,9 +240,11 @@ describe('StoreController', () => {
 
             getAllStoresUseCase.mockResolvedValue(stores);
 
+            req.query = {};
+
             await controller.getAllStores(req, res, next);
 
-            expect(getAllStoresUseCase).toHaveBeenCalled();
+            expect(getAllStoresUseCase).toHaveBeenCalledWith({});
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(stores);
             expect(next).not.toHaveBeenCalled();
@@ -250,10 +252,11 @@ describe('StoreController', () => {
 
         it('should return empty array when no approved stores exist', async () => {
             getAllStoresUseCase.mockResolvedValue([]);
+            req.query = {};
 
             await controller.getAllStores(req, res, next);
 
-            expect(getAllStoresUseCase).toHaveBeenCalled();
+            expect(getAllStoresUseCase).toHaveBeenCalledWith({});
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith([]);
         });
@@ -261,10 +264,11 @@ describe('StoreController', () => {
         it('should handle errors during stores retrieval and call next', async () => {
             const error = new Error('Database error');
             getAllStoresUseCase.mockRejectedValue(error);
+            req.query = {};
 
             await controller.getAllStores(req, res, next);
 
-            expect(getAllStoresUseCase).toHaveBeenCalled();
+            expect(getAllStoresUseCase).toHaveBeenCalledWith({});
             expect(next).toHaveBeenCalledWith(error);
             expect(res.status).not.toHaveBeenCalled();
             expect(res.json).not.toHaveBeenCalled();

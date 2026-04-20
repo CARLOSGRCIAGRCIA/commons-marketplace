@@ -10,6 +10,7 @@
  * @param {Function} useCases.getPendingStoresUseCase - Use case for getting pending stores (admin only).
  * @param {Function} useCases.getStoresByStatusUseCase - Use case for getting stores by status (admin only).
  * @param {Function} useCases.updateStoreStatusUseCase - Use case for updating store status (admin only).
+ * @param {Function} useCases.getStoreCategoriesUseCase - Use case for getting store categories.
  * @returns {object} An object with controller methods for store operations.
  */
 export function createStoreController({
@@ -22,6 +23,7 @@ export function createStoreController({
     getPendingStoresUseCase,
     getStoresByStatusUseCase,
     updateStoreStatusUseCase,
+    getStoreCategoriesUseCase,
 }) {
     return {
         /**
@@ -76,7 +78,9 @@ export function createStoreController({
          */
         async getAllStores(req, res, next) {
             try {
-                const stores = await getAllStoresUseCase();
+                const { categoryId } = req.query;
+                const filters = categoryId ? { categoryId } : {};
+                const stores = await getAllStoresUseCase(filters);
                 res.status(200).json(stores);
             } catch (error) {
                 next(error);
@@ -208,6 +212,19 @@ export function createStoreController({
 
                 res.status(200).json(updatedStore);
             } catch (error) {
+                next(error);
+            }
+        },
+
+        async getStoreCategories(req, res, next) {
+            try {
+                const storeId = req.params.id;
+                const categories = await getStoreCategoriesUseCase(storeId);
+                res.status(200).json(categories);
+            } catch (error) {
+                if (error.message === 'Store not found') {
+                    return res.status(404).json({ message: 'Store not found.' });
+                }
                 next(error);
             }
         },

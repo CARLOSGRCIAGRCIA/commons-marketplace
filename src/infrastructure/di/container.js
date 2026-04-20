@@ -43,6 +43,7 @@ import {
     updateProductUseCase,
     deleteProductUseCase,
     getStoreProductsUseCase,
+    getRelatedProductsUseCase,
 } from '../../application/use-cases/product/index.js';
 // Store
 import {
@@ -56,6 +57,7 @@ import {
     getPendingStoresUseCase,
     getStoresByStatusUseCase,
     updateStoreStatusUseCase,
+    getStoreCategoriesUseCase,
 } from '../../application/use-cases/store/index.js';
 // Review
 import {
@@ -149,6 +151,7 @@ export const createContainer = () => {
     const updateProductUC = updateProductUseCase(productRepo, categoryRepo);
     const deleteProductUC = deleteProductUseCase(productRepo, storeRepo);
     const getStoreProductsUC = getStoreProductsUseCase(productRepo, storeRepo);
+    const getRelatedProductsUC = getRelatedProductsUseCase(productRepo);
 
     // Store
     const createStoreUC = createStoreUseCase(storeRepo, userRepo, categoryRepo, fileService);
@@ -161,6 +164,7 @@ export const createContainer = () => {
     const getPendingStoresUC = getPendingStoresUseCase(storeRepo);
     const getStoresByStatusUC = getStoresByStatusUseCase(storeRepo);
     const updateStoreStatusUC = updateStoreStatusUseCase(storeRepo);
+    const getStoreCategoriesUC = getStoreCategoriesUseCase(storeRepo, productRepo, categoryRepo);
 
     // Review
     const createReviewUC = createReviewUseCase(reviewRepo, userRepo, productRepo, storeRepo);
@@ -259,6 +263,7 @@ export const createContainer = () => {
         updateProductUseCase: updateProductUC,
         deleteProductUseCase: deleteProductUC,
         getStoreProductsUseCase: getStoreProductsUC,
+        getRelatedProductsUseCase: getRelatedProductsUC,
     });
 
     const storeController = createStoreController({
@@ -272,6 +277,7 @@ export const createContainer = () => {
         getPendingStoresUseCase: getPendingStoresUC,
         getStoresByStatusUseCase: getStoresByStatusUC,
         updateStoreStatusUseCase: updateStoreStatusUC,
+        getStoreCategoriesUseCase: getStoreCategoriesUC,
     });
 
     const reviewController = createReviewController({

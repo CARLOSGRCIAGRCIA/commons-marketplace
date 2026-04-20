@@ -8,6 +8,7 @@
  * @param {Function} dependencies.updateProductUseCase - Use case for updating products
  * @param {Function} dependencies.deleteProductUseCase - Use case for deleting products
  * @param {Function} dependencies.getStoreProductsUseCase - Use case for getting products by store
+ * @param {Function} dependencies.getRelatedProductsUseCase - Use case for getting related products
  * @returns {object} Product controller methods
  */
 export function createProductController({
@@ -17,6 +18,7 @@ export function createProductController({
     updateProductUseCase,
     deleteProductUseCase,
     getStoreProductsUseCase,
+    getRelatedProductsUseCase,
 }) {
     return {
         /**
@@ -254,6 +256,21 @@ export function createProductController({
                 }
                 res.status(204).send();
             } catch (error) {
+                next(error);
+            }
+        },
+
+        async getRelatedProducts(req, res, next) {
+            try {
+                const { id } = req.params;
+                const { limit } = req.query;
+                const limitNum = limit ? parseInt(limit) : 10;
+                const related = await getRelatedProductsUseCase(id, limitNum);
+                res.status(200).json(related);
+            } catch (error) {
+                if (error.message === 'Product not found') {
+                    return res.status(404).json({ message: 'Product not found' });
+                }
                 next(error);
             }
         },
