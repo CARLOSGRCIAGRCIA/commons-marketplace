@@ -1,9 +1,5 @@
 export default {
-    testPathIgnorePatterns: [
-        '/node_modules/',
-        '/test/e2e/',
-        '/test/integration/',
-    ],
+    testPathIgnorePatterns: ['/node_modules/', '/test/e2e/', '/test/integration/'],
     collectCoverage: true,
     collectCoverageFrom: [
         'src/**/*.{js,ts}',

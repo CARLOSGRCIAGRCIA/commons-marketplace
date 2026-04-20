@@ -1,4 +1,10 @@
-import { cacheManager, CACHE_TTL, CACHE_KEYS, invalidateCache, getCachedOrFetch } from '../../../src/infrastructure/cache/cacheManager.js';
+import {
+    cacheManager,
+    CACHE_TTL,
+    CACHE_KEYS,
+    invalidateCache,
+    getCachedOrFetch,
+} from '../../../src/infrastructure/cache/cacheManager.js';
 
 describe('CacheManager', () => {
     describe('Constants', () => {

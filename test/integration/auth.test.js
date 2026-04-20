@@ -40,16 +40,12 @@ describe('Auth Integration', () => {
 describe('Health Check', () => {
     describe('GET /health', () => {
         it('should return OK status', async () => {
-            const response = await request('http://localhost:3000')
-                .get('/health')
-                .expect(200);
+            const response = await request('http://localhost:3000').get('/health').expect(200);
             expect(response.body.status).toBe('OK');
         });
 
         it('should include environment info', async () => {
-            const response = await request('http://localhost:3000')
-                .get('/health')
-                .expect(200);
+            const response = await request('http://localhost:3000').get('/health').expect(200);
             expect(response.body.environment).toBeDefined();
             expect(response.body.service).toBe('commons-marketplace');
         });
@@ -58,8 +54,7 @@ describe('Health Check', () => {
 
 describe('Rate Limiting', () => {
     it('should include rate limit headers', async () => {
-        const response = await request('http://localhost:3000')
-            .get('/health');
+        const response = await request('http://localhost:3000').get('/health');
         expect(response.headers['ratelimit-limit']).toBeDefined();
     });
 });

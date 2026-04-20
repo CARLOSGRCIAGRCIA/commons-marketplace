@@ -33,9 +33,7 @@ describe('Products Integration', () => {
 
     describe('GET /api/products/:id', () => {
         it('should return 404 for non-existent product', async () => {
-            await request('http://localhost:3000')
-                .get('/api/products/nonexistent-id')
-                .expect(404);
+            await request('http://localhost:3000').get('/api/products/nonexistent-id').expect(404);
         });
     });
 
@@ -59,9 +57,7 @@ describe('Products Integration', () => {
 
     describe('DELETE /api/products/:id (protected)', () => {
         it('should require authentication', async () => {
-            await request('http://localhost:3000')
-                .delete('/api/products/test-id')
-                .expect(401);
+            await request('http://localhost:3000').delete('/api/products/test-id').expect(401);
         });
     });
 });

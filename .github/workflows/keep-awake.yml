@@ -1,15 +1,15 @@
 name: Keep Render Service Awake
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
-  workflow_dispatch:
+    schedule:
+        - cron: '*/10 * * * *'
+    workflow_dispatch:
 
 jobs:
-  ping:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ping Render Service
-        run: |
-          curl -I https://commons-marketplace.onrender.com/health \
-            || echo "Service might be spinning up"
+    ping:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Ping Render Service
+              run: |
+                  curl -I https://commons-marketplace.onrender.com/health \
+                    || echo "Service might be spinning up"
