@@ -25,7 +25,7 @@ const colors = {
 
 winston.addColors(colors);
 
-const logDir = process.env.LOG_DIR || path.join(__dirname, '../../logs');
+const logDir = process.env.LOG_DIR || path.join(process.cwd(), 'logs');
 
 if (!fs.existsSync(logDir) && process.env.NODE_ENV !== 'test') {
     fs.mkdirSync(logDir, { recursive: true });
