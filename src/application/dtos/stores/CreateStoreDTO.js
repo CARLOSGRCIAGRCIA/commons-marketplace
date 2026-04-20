@@ -4,6 +4,8 @@
  * @property {string} storeName - The name of the new store.
  * @property {string} [description] - An optional description for the store.
  * @property {string} [logo] - An optional logo URL for the store.
+ * @property {string[]} [categoryIds] - Array of category IDs the store sells.
+ * @property {number} [productCount] - Number of products in the store.
  */
 
 /**
@@ -13,10 +15,12 @@
  * @param {string} data.storeName - The name of the new store.
  * @param {string} [data.description] - An optional description for the store.
  * @param {string} [data.logo] - An optional logo URL for the store.
+ * @param {string[]} [data.categoryIds] - Array of category IDs.
+ * @param {number} [data.productCount] - Product count (default 0).
  * @returns {CreateStoreDTO} The created and frozen DTO object.
  * @throws {Error} If required fields are missing.
  */
-export function createCreateStoreDTO({ userId, storeName, description, logo }) {
+export function createCreateStoreDTO({ userId, storeName, description, logo, categoryIds, productCount }) {
     if (!userId || !storeName) {
         throw new Error('userId and storeName are required to create a store.');
     }
@@ -26,6 +30,8 @@ export function createCreateStoreDTO({ userId, storeName, description, logo }) {
         storeName: storeName,
         description: description ?? '',
         logo: logo ?? null,
+        categoryIds: categoryIds ?? [],
+        productCount: productCount ?? 0,
     };
 
     return Object.freeze(dto);
