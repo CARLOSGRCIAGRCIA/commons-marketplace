@@ -27,17 +27,9 @@ const productSchema = new mongoose.Schema(
             ref: 'Category',
             required: true,
         },
-        categoryName: {
-            type: String,
-            required: true,
-        },
         subCategoryId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Category',
-            required: false,
-        },
-        subCategoryName: {
-            type: String,
             required: false,
         },
         sellerId: {

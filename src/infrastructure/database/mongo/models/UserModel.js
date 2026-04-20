@@ -36,10 +36,6 @@ const userSchema = new Schema(
             type: String,
             default: 'https://api.dicebear.com/9.x/lorelei/svg',
         },
-        isApprovedSeller: {
-            type: Boolean,
-            default: false,
-        },
         role: {
             type: String,
             enum: ['buyer', 'seller', 'admin'],

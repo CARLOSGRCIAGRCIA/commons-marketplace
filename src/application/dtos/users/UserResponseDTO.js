@@ -6,7 +6,6 @@ export const UserResponseDTO = {
         phoneNumber: user.phoneNumber,
         address: user.address,
         profilePicUrl: user.profilePicUrl,
-        isApprovedSeller: user.isApprovedSeller,
         email: user.email,
         role: user.role,
     }),

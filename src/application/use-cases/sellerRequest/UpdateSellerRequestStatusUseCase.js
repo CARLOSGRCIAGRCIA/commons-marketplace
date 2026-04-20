@@ -32,7 +32,6 @@ export const updateSellerRequestStatusUseCase = (
             try {
                 await userRepository.updateById(request.userId, {
                     role: 'seller',
-                    isApprovedSeller: true,
                 });
                 await authRepository.updateUserMetadata(request.userId, {
                     role: 'Seller',

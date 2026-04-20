@@ -34,10 +34,6 @@ export const createUserValidation = () => [
         .withMessage('Profile picture URL must be a valid URL format.')
         .isString()
         .withMessage('Profile picture URL must be a string.'),
-    body('isApprovedSeller')
-        .optional()
-        .isBoolean()
-        .withMessage('isApprovedSeller must be a boolean (true or false).'),
 ];
 
 export const updateUserValidation = () => [
@@ -68,10 +64,6 @@ export const updateUserValidation = () => [
         .withMessage('Profile picture URL must be a valid URL format.')
         .isString()
         .withMessage('Profile picture URL must be a string.'),
-    body('isApprovedSeller')
-        .optional()
-        .isBoolean()
-        .withMessage('isApprovedSeller must be a boolean (true or false).'),
 ];
 
 export const userIdParamValidation = () => [
