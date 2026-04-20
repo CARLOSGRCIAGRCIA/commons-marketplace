@@ -9,6 +9,7 @@
  * @param {string} category.parent - The parent category ID.
  * @param {number} category.level - The category level (0: main, 1: subcategory).
  * @param {boolean} category.isActive - Whether the category is active.
+ * @param {number} [category.productCount] - Number of products in this category.
  * @param {object} [category.parentDetails] - The parent category details (populated).
  * @returns {object} The category response DTO.
  */
@@ -21,6 +22,7 @@ export const categoryResponseDTO = (category) => ({
     parentName: category.parentDetails?.name || null,
     level: category.level,
     isActive: category.isActive,
+    productCount: category.productCount || 0,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
 });
