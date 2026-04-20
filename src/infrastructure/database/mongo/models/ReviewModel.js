@@ -1,6 +1,6 @@
-import { Schema, model } from 'mongoose';
+import mongoose from 'mongoose';
 
-const reviewSchema = new Schema(
+const reviewSchema = new mongoose.Schema(
     {
         _id: {
             type: String,
@@ -10,6 +10,21 @@ const reviewSchema = new Schema(
             type: String,
             required: true,
             ref: 'user',
+        },
+        type: {
+            type: String,
+            enum: ['product', 'store'],
+            required: true,
+        },
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Product',
+            required: false,
+        },
+        storeId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Store',
+            required: false,
         },
         commentary: {
             type: String,
@@ -31,9 +46,12 @@ const reviewSchema = new Schema(
 );
 
 reviewSchema.index({ userId: 1 });
-
+reviewSchema.index({ type: 1 });
+reviewSchema.index({ productId: 1 });
+reviewSchema.index({ storeId: 1 });
 reviewSchema.index({ score: 1 });
-
+reviewSchema.index({ userId: 1, type: 1 });
 reviewSchema.index({ userId: 1, createdAt: -1 });
 
-export default model('review', reviewSchema);
+const ReviewModel = mongoose.model('review', reviewSchema);
+export default ReviewModel;
