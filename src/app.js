@@ -11,12 +11,14 @@ import { createAdminRoutes } from './presentation/routes/adminRoutes.js';
 import { createReviewRoutes } from './presentation/routes/reviewRoutes.js';
 import { createSellerRequestRoutes } from './presentation/routes/sellerRequestRoutes.js';
 import { createCouponRoutes } from './presentation/routes/couponRoutes.js';
+import { createPushRoutes } from './presentation/routes/pushRoutes.js';
 import { verifySupabaseConnection } from './infrastructure/supabase/config/supabaseClient.js';
 import connectDB from './infrastructure/database/db.js';
 import { createIndexes } from './infrastructure/database/indexes.js';
 import { errorHandler } from './presentation/middlewares/errorHandler.js';
 import logger from './infrastructure/logger/logger.js';
 import { getEnvironmentConfig } from './config/environment.js';
+import { authenticate } from './presentation/middlewares/authMiddleware.js';
 
 /**
  * Create Express application
@@ -51,7 +53,37 @@ const createApp = async () => {
 
     setupExpress(app);
 
-    const container = createContainer();
+const container = createContainer();
+
+    const containerV1 = createContainer();
+
+    const v1Router = express.Router();
+
+    v1Router.use('/auth', createAuthRoutes(containerV1.authController));
+    v1Router.use('/users', createUserRoutes(containerV1.userController));
+    v1Router.use('/categories', categoryRoutes(containerV1));
+    v1Router.use('/products', createProductRoutes(containerV1.productController, containerV1.canModifyProduct));
+    v1Router.use('/stores', createStoreRoutes(containerV1.storeController, containerV1.canModifyStore));
+    v1Router.use('/admin', createAdminRoutes(containerV1.adminController));
+    v1Router.use('/chat', createChatRoutes(containerV1.chatController));
+    v1Router.use('/reviews', createReviewRoutes(containerV1.reviewController));
+    v1Router.use('/seller-requests', createSellerRequestRoutes(containerV1.sellerRequestController));
+    v1Router.use('/coupons', createCouponRoutes(containerV1.couponController));
+
+    app.use('/api/v1', v1Router);
+
+    app.use((req, res, next) => {
+        if (req.path.startsWith('/api/') && !req.path.startsWith('/api/v1')) {
+            logger.warn('Deprecated API endpoint accessed', {
+                path: req.originalUrl,
+                method: req.method,
+                ip: req.ip,
+            });
+            res.set('Deprecation', 'true');
+            res.set('Link', '<https://api.example.com/api/v1' + req.path + '>; rel="v1"');
+        }
+        next();
+    });
 
     app.use('/api/auth', createAuthRoutes(container.authController));
     app.use('/api/users', createUserRoutes(container.userController));
@@ -66,6 +98,7 @@ const createApp = async () => {
     app.use('/api/reviews', createReviewRoutes(container.reviewController));
     app.use('/api/seller-requests', createSellerRequestRoutes(container.sellerRequestController));
     app.use('/api/coupons', createCouponRoutes(container.couponController));
+    app.use('/api/push', authenticate, createPushRoutes());
 
     app.use((req, res) => {
         logger.warn('Route not found', {
@@ -75,8 +108,8 @@ const createApp = async () => {
         });
 
         const availableRoutes = [
-            '/api/auth',
-            '/api/users',
+            '/api/v1/auth',
+            '/api/v1/users',
             '/api/categories',
             '/api/products',
             '/api/stores',

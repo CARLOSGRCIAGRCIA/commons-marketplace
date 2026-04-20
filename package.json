@@ -10,7 +10,9 @@
         "lint:fix": "eslint . --fix && prettier --write .",
         "prettier:check": "prettier --check .",
         "test": "jest",
-        "coverage": "jest --coverage --passWithNoTests"
+        "coverage": "jest --coverage --passWithNoTests",
+        "seed": "node src/infrastructure/database/seeders/index.js",
+        "prepare": "husky install"
     },
     "repository": {
         "type": "git",
@@ -55,14 +57,18 @@
         "prettier": "^3.5.3",
         "sanitize-html": "^2.17.3",
         "sharp": "^0.34.5",
+        "socket.io": "^4.8.3",
         "supabase": "^2.51.0",
         "swagger-ui-express": "^5.0.1",
         "uuid": "^13.0.0",
+        "web-push": "^3.6.7",
         "winston": "^3.18.3"
     },
     "devDependencies": {
         "@playwright/test": "^1.59.1",
         "@types/ably": "^1.0.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.4.0",
         "supertest": "^7.1.4"
     }
 }
