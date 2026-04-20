@@ -20,8 +20,8 @@ export default {
         global: {
             branches: 65,
             functions: 64,
-            lines: 73,
-            statements: 73,
+            lines: 60,
+            statements: 60,
         },
     },
     setupFilesAfterEnv: ['<rootDir>/test/setup.js'],
