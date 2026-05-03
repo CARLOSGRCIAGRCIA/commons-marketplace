@@ -1,6 +1,7 @@
 import { createCreateStoreDTO, createStoreResponseDTO } from '../../dtos/stores/index.js';
 import { forbiddenException, notFoundException } from '../../../presentation/exceptions/index.js';
 import { log } from '../../../infrastructure/logger/logger.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 /**
  * Use case for creating a new store.
@@ -22,8 +23,8 @@ export const createStoreUseCase =
             throw notFoundException('User not found');
         }
 
-        if (user.role !== 'seller') {
-            log.warn('User is not a seller', { userId: storeData.userId, role: user.role });
+        if (user.role !== 'seller' && user.role !== 'admin') {
+            log.warn('User is not a seller or admin', { userId: storeData.userId, role: user.role });
             throw forbiddenException('You must be an approved seller to create a store.');
         }
 
@@ -61,5 +62,9 @@ export const createStoreUseCase =
 
         const newStore = await storeRepository.create(createStoreDTO);
         log.info('Store created successfully', { storeId: newStore._id });
+
+        invalidateCache('stores:');
+        invalidateCache('products:');
+
         return createStoreResponseDTO(newStore);
     };

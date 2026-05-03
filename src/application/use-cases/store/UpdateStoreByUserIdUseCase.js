@@ -1,5 +1,6 @@
 import { createUpdateStoreDTO, createStoreResponseDTO } from '../../dtos/stores/index.js';
 import { log } from '../../../infrastructure/logger/logger.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 /**
  * Use case for updating a store.
@@ -80,6 +81,9 @@ export const updateStoreUseCase =
                 storeId,
                 storeName: updatedStore.storeName,
             });
+
+            invalidateCache('stores:');
+            invalidateCache(`store:${storeId}`);
 
             return createStoreResponseDTO(updatedStore);
         } catch (error) {
