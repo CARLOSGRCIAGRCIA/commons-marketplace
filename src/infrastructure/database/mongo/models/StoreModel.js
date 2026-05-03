@@ -13,6 +13,26 @@ const storeSchema = new mongoose.Schema(
             trim: true,
             unique: true,
         },
+        slug: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true,
+        },
+        seoTitle: {
+            type: String,
+            required: false,
+            maxlength: 70,
+        },
+        seoDescription: {
+            type: String,
+            required: false,
+            maxlength: 160,
+        },
+        ogImage: {
+            type: String,
+            required: false,
+        },
         description: {
             type: String,
             required: false,

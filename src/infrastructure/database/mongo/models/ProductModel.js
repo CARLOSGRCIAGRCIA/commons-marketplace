@@ -7,9 +7,29 @@ const productSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        slug: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true,
+        },
         description: {
             type: String,
             required: true,
+        },
+        seoTitle: {
+            type: String,
+            required: false,
+            maxlength: 70,
+        },
+        seoDescription: {
+            type: String,
+            required: false,
+            maxlength: 160,
+        },
+        ogImage: {
+            type: String,
+            required: false,
         },
         price: {
             type: Number,
@@ -68,6 +88,7 @@ productSchema.index({ subCategoryId: 1 });
 productSchema.index({ sellerId: 1 });
 productSchema.index({ status: 1 });
 productSchema.index({ createdAt: -1 });
+productSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
 const ProductModel = mongoose.model('Product', productSchema);
 export default ProductModel;
