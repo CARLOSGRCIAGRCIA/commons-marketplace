@@ -1,7 +1,10 @@
 import { log } from '../../../infrastructure/logger/logger.js';
 import { cacheManager, CACHE_KEYS, CACHE_TTL } from '../../../infrastructure/cache/cacheManager.js';
+import ProductModel from '../../../infrastructure/database/mongo/models/ProductModel.js';
+import StoreModel from '../../../infrastructure/database/mongo/models/StoreModel.js';
+import UserModel from '../../../infrastructure/database/mongo/models/UserModel.js';
 
-export const createGetAdminStatsUseCase = (userRepository, productRepository) => {
+export const createGetAdminStatsUseCase = (userRepository, productRepository, categoryRepository, storeRepository) => {
     const execute = async () => {
         try {
             const cached = cacheManager.get(CACHE_KEYS.ADMIN_STATS);
@@ -12,22 +15,24 @@ export const createGetAdminStatsUseCase = (userRepository, productRepository) =>
 
             log.info('Fetching admin statistics');
 
-            const [users, products] = await Promise.all([
-                userRepository.findAll(),
-                productRepository.findAll(),
+            // Use Mongoose models directly to bypass repository filters
+            const [users, products, stores] = await Promise.all([
+                UserModel.find({}).lean(),
+                ProductModel.find({}).lean(),
+                StoreModel.find({}).lean(),
             ]);
-
-            log.debug('Data retrieved', {
-                userCount: users.length,
-                productCount: products.length,
-            });
 
             const userStats = calculateUserStats(users);
             const productStats = calculateProductStats(products);
+            const storeStats = calculateStoreStats(stores);
 
             const result = {
-                ...userStats,
-                ...productStats,
+                totalUsers: userStats.totalUsers,
+                totalProducts: productStats.totalProducts,
+                totalStores: storeStats.totalStores,
+                totalReviews: 0,
+                pendingStores: storeStats.pendingStores,
+                pendingSellerRequests: 0,
             };
 
             cacheManager.set(CACHE_KEYS.ADMIN_STATS, result, CACHE_TTL.ADMIN_STATS);
@@ -81,6 +86,20 @@ const calculateProductStats = (products) => {
     return {
         totalProducts: products.length,
     };
+};
+
+const calculateStoreStats = (stores) => {
+    const stats = {
+        totalStores: stores.length,
+        pendingStores: 0,
+    };
+    stores.forEach((store) => {
+        const status = store.status?.toLowerCase() || '';
+        if (status === 'pending' || status === 'pendiente') {
+            stats.pendingStores++;
+        }
+    });
+    return stats;
 };
 
 export default createGetAdminStatsUseCase;
