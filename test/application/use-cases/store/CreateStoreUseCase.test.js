@@ -52,7 +52,13 @@ describe('CreateStoreUseCase Tests', () => {
         expect(userRepository.findById).toHaveBeenCalledWith('user123');
         expect(storeRepository.countByUserId).toHaveBeenCalledWith('user123');
         expect(storeRepository.create).toHaveBeenCalledWith(
-            createCreateStoreDTO({ ...storeData, logo: null, productCount: 0 }),
+            expect.objectContaining({
+                userId: 'user123',
+                storeName: 'Test Store',
+                description: 'Test description',
+                logo: null,
+                productCount: 0,
+            }),
         );
         expect(result).toEqual(createStoreResponseDTO(mockStore));
         expect(fileService.uploadImage).not.toHaveBeenCalled();
@@ -87,7 +93,13 @@ describe('CreateStoreUseCase Tests', () => {
             prefix: 'logo',
         });
         expect(storeRepository.create).toHaveBeenCalledWith(
-            createCreateStoreDTO({ ...storeData, logo: logoUrl, productCount: 0 }),
+            expect.objectContaining({
+                userId: 'user123',
+                storeName: 'Test Store',
+                description: 'Test description',
+                logo: logoUrl,
+                productCount: 0,
+            }),
         );
         expect(result).toEqual(createStoreResponseDTO(mockStore));
     });

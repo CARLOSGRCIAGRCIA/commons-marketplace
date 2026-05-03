@@ -17,18 +17,21 @@ describe('StoreResponseDTO Tests', () => {
 
         const dto = createStoreResponseDTO(store);
 
-        expect(dto).toEqual({
-            id: '507f1f77bcf86cd799439011',
-            userId: 'user123',
-            storeName: 'My Test Store',
-            description: 'A test store description',
-            logo: 'https://example.com/logo.jpg',
-            status: 'Approved',
-            categoryIds: [],
-            productCount: 0,
-            createdAt: '2023-01-01T00:00:00.000Z',
-            updatedAt: '2023-01-02T00:00:00.000Z',
-        });
+        expect(dto).toEqual(
+            expect.objectContaining({
+                id: '507f1f77bcf86cd799439011',
+                _id: '507f1f77bcf86cd799439011',
+                userId: 'user123',
+                storeName: 'My Test Store',
+                description: 'A test store description',
+                logo: 'https://example.com/logo.jpg',
+                status: 'Approved',
+                categoryIds: [],
+                productCount: 0,
+                createdAt: '2023-01-01T00:00:00.000Z',
+                updatedAt: '2023-01-02T00:00:00.000Z',
+            }),
+        );
         expect(Object.isFrozen(dto)).toBe(true);
     });
 
@@ -48,18 +51,21 @@ describe('StoreResponseDTO Tests', () => {
 
         const dto = createStoreResponseDTO(store);
 
-        expect(dto).toEqual({
-            id: 'store123',
-            userId: 'user123',
-            storeName: 'My Test Store',
-            description: 'A test store description',
-            logo: 'https://example.com/logo.jpg',
-            status: 'Pending',
-            categoryIds: [],
-            productCount: 0,
-            createdAt: '2023-01-01T00:00:00.000Z',
-            updatedAt: '2023-01-02T00:00:00.000Z',
-        });
+        expect(dto).toEqual(
+            expect.objectContaining({
+                id: 'store123',
+                _id: 'store123',
+                userId: 'user123',
+                storeName: 'My Test Store',
+                description: 'A test store description',
+                logo: 'https://example.com/logo.jpg',
+                status: 'Pending',
+                categoryIds: [],
+                productCount: 0,
+                createdAt: '2023-01-01T00:00:00.000Z',
+                updatedAt: '2023-01-02T00:00:00.000Z',
+            }),
+        );
         expect(Object.isFrozen(dto)).toBe(true);
     });
 
@@ -126,18 +132,21 @@ describe('StoreResponseDTO Tests', () => {
 
         const dto = createStoreResponseDTO(store);
 
-        expect(dto).toEqual({
-            id: 'store123',
-            userId: 'user123',
-            storeName: 'My Test Store',
-            description: undefined,
-            logo: null,
-            status: 'Approved',
-            categoryIds: [],
-            productCount: 0,
-            createdAt: '2023-01-01T00:00:00.000Z',
-            updatedAt: '2023-01-02T00:00:00.000Z',
-        });
+        expect(dto).toEqual(
+            expect.objectContaining({
+                id: 'store123',
+                _id: 'store123',
+                userId: 'user123',
+                storeName: 'My Test Store',
+                description: undefined,
+                logo: null,
+                status: 'Approved',
+                categoryIds: [],
+                productCount: 0,
+                createdAt: '2023-01-01T00:00:00.000Z',
+                updatedAt: '2023-01-02T00:00:00.000Z',
+            }),
+        );
     });
 
     it('should prioritize _id over id if both exist', () => {

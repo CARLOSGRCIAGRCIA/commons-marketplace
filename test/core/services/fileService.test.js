@@ -1,6 +1,6 @@
-import supabase from '../../../src/infrastructure/supabase/config/supabaseClient.js';
 import { internalServerError } from '../../../src/presentation/exceptions/internalServerError.js';
 import { log } from '../../../src/infrastructure/logger/logger.js';
+import { supabaseAdmin as supabase } from '../../../src/infrastructure/supabase/config/supabaseClient.js';
 import {
     uploadImage,
     uploadMultipleImages,
@@ -9,7 +9,17 @@ import {
     replaceImage,
 } from '../../../src/core/services/fileService.js';
 
-jest.mock('../../../src/infrastructure/supabase/config/supabaseClient.js');
+jest.mock('../../../src/infrastructure/supabase/config/supabaseClient.js', () => ({
+    supabaseAdmin: {
+        storage: {
+            from: jest.fn(() => ({
+                upload: jest.fn(),
+                getPublicUrl: jest.fn(),
+                remove: jest.fn(),
+            })),
+        },
+    },
+}));
 jest.mock('../../../src/presentation/exceptions/internalServerError.js');
 
 describe('FileService', () => {

@@ -1,5 +1,4 @@
 import { createProductUseCase } from '../../../../src/application/use-cases/product/CreateProductUseCase.js';
-import { createCreateProductDTO } from '../../../../src/application/dtos/products/CreateProductDTO.js';
 import { createProductResponseDTO } from '../../../../src/application/dtos/products/ProductResponseDTO.js';
 import { uploadImage, uploadMultipleImages } from '../../../../src/core/services/fileService.js';
 import { log } from '../../../../src/infrastructure/logger/logger.js';
@@ -18,7 +17,7 @@ describe('CreateProductUseCase Tests', () => {
             create: jest.fn(),
         };
         storeRepository = {
-            findById: jest.fn(),
+            findByIdOrSlug: jest.fn(),
             incrementProductCount: jest.fn(),
         };
         categoryRepository = {
@@ -49,6 +48,7 @@ describe('CreateProductUseCase Tests', () => {
         };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
@@ -61,14 +61,14 @@ describe('CreateProductUseCase Tests', () => {
             isActive: true,
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById.mockResolvedValue(mockCategory);
         uploadImage.mockResolvedValue('https://example.com/main.jpg');
         productRepository.create.mockResolvedValue(mockProduct);
 
         const result = await useCase(productData, mainImageFile);
 
-        expect(storeRepository.findById).toHaveBeenCalledWith('store1');
+        expect(storeRepository.findByIdOrSlug).toHaveBeenCalledWith('store1');
         expect(categoryRepository.findById).toHaveBeenCalledWith('cat1');
         expect(storeRepository.incrementProductCount).toHaveBeenCalledWith('store1');
         expect(uploadImage).toHaveBeenCalledWith(mainImageFile, {
@@ -76,15 +76,21 @@ describe('CreateProductUseCase Tests', () => {
             prefix: 'main',
         });
         expect(productRepository.create).toHaveBeenCalledWith(
-            createCreateProductDTO({
-                ...productData,
+            expect.objectContaining({
+                name: 'Test Product',
+                description: 'A product for testing',
+                price: 100,
+                stock: 10,
+                categoryId: 'cat1',
+                sellerId: 'seller1',
+                storeId: 'store1',
                 mainImageUrl: 'https://example.com/main.jpg',
                 imageUrls: [],
-                categoryName: 'Electronics',
-                subCategoryName: null,
+                subCategoryId: null,
             }),
         );
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
 
         expect(log.info).toHaveBeenCalledWith('Creating new product', {
             productName: 'Test Product',
@@ -126,9 +132,11 @@ describe('CreateProductUseCase Tests', () => {
         };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: [],
         };
 
         const mockCategory = {
@@ -137,7 +145,7 @@ describe('CreateProductUseCase Tests', () => {
             isActive: true,
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById.mockResolvedValue(mockCategory);
         uploadImage.mockResolvedValue('https://example.com/main.jpg');
         uploadMultipleImages.mockResolvedValue(additionalImageUrls);
@@ -153,7 +161,8 @@ describe('CreateProductUseCase Tests', () => {
             folder: 'products',
             prefix: 'gallery',
         });
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
 
         expect(log.debug).toHaveBeenCalledWith('Uploading additional images', { count: 2 });
     });
@@ -181,9 +190,11 @@ describe('CreateProductUseCase Tests', () => {
         };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: ['cat1'],
         };
 
         const mockCategory = {
@@ -199,7 +210,7 @@ describe('CreateProductUseCase Tests', () => {
             parent: 'cat1',
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById
             .mockResolvedValueOnce(mockCategory)
             .mockResolvedValueOnce(mockSubCategory);
@@ -210,15 +221,21 @@ describe('CreateProductUseCase Tests', () => {
 
         expect(categoryRepository.findById).toHaveBeenCalledWith('sub1');
         expect(productRepository.create).toHaveBeenCalledWith(
-            createCreateProductDTO({
-                ...productData,
+            expect.objectContaining({
+                name: 'Test Product',
+                description: 'A product for testing',
+                price: 100,
+                stock: 10,
+                categoryId: 'cat1',
+                subCategoryId: 'sub1',
+                sellerId: 'seller1',
+                storeId: 'store1',
                 mainImageUrl: 'https://example.com/main.jpg',
                 imageUrls: [],
-                categoryName: 'Electronics',
-                subCategoryName: 'Smartphones',
             }),
         );
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
 
         expect(log.debug).toHaveBeenCalledWith('Validating subcategory', { subCategoryId: 'sub1' });
     });
@@ -240,9 +257,11 @@ describe('CreateProductUseCase Tests', () => {
         }));
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: [],
         };
 
         const mockCategory = {
@@ -251,22 +270,23 @@ describe('CreateProductUseCase Tests', () => {
             isActive: true,
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById.mockResolvedValue(mockCategory);
         uploadImage.mockResolvedValue('https://example.com/main.jpg');
         uploadMultipleImages.mockResolvedValue([]);
         productRepository.create.mockResolvedValue({});
 
-        await useCase(productData, mainImageFile, additionalImagesFiles);
+        const result = await useCase(productData, mainImageFile, additionalImagesFiles);
 
         expect(uploadMultipleImages).toHaveBeenCalledWith(additionalImagesFiles.slice(0, 5), {
             folder: 'products',
             prefix: 'gallery',
         });
         expect(log.debug).toHaveBeenCalledWith('Uploading additional images', { count: 5 });
+        expect(result.isOk).toBe(true);
     });
 
-    it('should throw an error if main image is not provided', async () => {
+    it('should return an error if main image is not provided', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -277,12 +297,16 @@ describe('CreateProductUseCase Tests', () => {
             storeId: 'store1',
         };
 
-        await expect(useCase(productData, null)).rejects.toThrow('Main product image is required');
+        const result = await useCase(productData, null);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('Main product image is required');
+        expect(result.error.statusCode).toBe(422);
 
         expect(log.warn).toHaveBeenCalledWith('Product creation failed: Main image not provided');
     });
 
-    it('should throw an error if storeId is not provided', async () => {
+    it('should return an error if storeId is not provided', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -294,14 +318,17 @@ describe('CreateProductUseCase Tests', () => {
 
         const mainImageFile = { filename: 'main.jpg' };
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe(
             'Store ID is required. Products must be associated with a store.',
         );
 
         expect(log.warn).toHaveBeenCalledWith('Product creation failed: Store ID not provided');
     });
 
-    it('should throw an error if categoryId is not provided', async () => {
+    it('should return an error if categoryId is not provided', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -313,14 +340,17 @@ describe('CreateProductUseCase Tests', () => {
 
         const mainImageFile = { filename: 'main.jpg' };
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe(
             'Category ID is required. Products must be associated with a category.',
         );
 
         expect(log.warn).toHaveBeenCalledWith('Product creation failed: Category ID not provided');
     });
 
-    it('should throw an error if store not found', async () => {
+    it('should return an error if store not found', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -333,14 +363,18 @@ describe('CreateProductUseCase Tests', () => {
 
         const mainImageFile = { filename: 'main.jpg' };
 
-        storeRepository.findById.mockResolvedValue(null);
+        storeRepository.findByIdOrSlug.mockResolvedValue(null);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow('Store not found.');
+        const result = await useCase(productData, mainImageFile);
 
-        expect(log.warn).toHaveBeenCalledWith('Store not found', { storeId: 'store1' });
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('Store not found.');
+        expect(result.error.statusCode).toBe(404);
+
+        expect(log.warn).toHaveBeenCalledWith('Store not found', { storeIdOrSlug: 'store1' });
     });
 
-    it('should throw an error if store does not belong to seller', async () => {
+    it('should return an error if store does not belong to seller', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -354,16 +388,19 @@ describe('CreateProductUseCase Tests', () => {
         const mainImageFile = { filename: 'main.jpg' };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'different-seller',
             status: 'Approved',
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
-            'You can only create products for your own stores.',
-        );
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('You can only create products for your own stores.');
+        expect(result.error.statusCode).toBe(403);
 
         expect(log.warn).toHaveBeenCalledWith('Store ownership validation failed', {
             storeUserId: 'different-seller',
@@ -371,7 +408,7 @@ describe('CreateProductUseCase Tests', () => {
         });
     });
 
-    it('should throw an error if store is not approved', async () => {
+    it('should return an error if store is not approved', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -385,16 +422,21 @@ describe('CreateProductUseCase Tests', () => {
         const mainImageFile = { filename: 'main.jpg' };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Pending',
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe(
             'Cannot create products for a store with status: Pending. Store must be Approved.',
         );
+        expect(result.error.statusCode).toBe(422);
 
         expect(log.warn).toHaveBeenCalledWith('Store not approved', {
             storeId: 'store1',
@@ -402,7 +444,7 @@ describe('CreateProductUseCase Tests', () => {
         });
     });
 
-    it('should throw an error if category not found', async () => {
+    it('should return an error if category not found', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -416,24 +458,27 @@ describe('CreateProductUseCase Tests', () => {
         const mainImageFile = { filename: 'main.jpg' };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById.mockResolvedValue(null);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
-            'Category not found or inactive.',
-        );
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('Category not found or inactive.');
+        expect(result.error.statusCode).toBe(404);
 
         expect(log.warn).toHaveBeenCalledWith('Category not found or inactive', {
             categoryId: 'cat1',
         });
     });
 
-    it('should throw an error if subcategory does not belong to category', async () => {
+    it('should return an error if subcategory does not belong to category', async () => {
         const productData = {
             name: 'Test Product',
             description: 'A product for testing',
@@ -448,9 +493,11 @@ describe('CreateProductUseCase Tests', () => {
         const mainImageFile = { filename: 'main.jpg' };
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: ['cat1'],
         };
 
         const mockCategory = {
@@ -466,14 +513,18 @@ describe('CreateProductUseCase Tests', () => {
             parent: 'different-category',
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById
             .mockResolvedValueOnce(mockCategory)
             .mockResolvedValueOnce(mockSubCategory);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe(
             'Subcategory does not belong to the selected category.',
         );
+        expect(result.error.statusCode).toBe(422);
 
         expect(log.warn).toHaveBeenCalledWith('Subcategory does not belong to category', {
             subCategoryId: 'sub1',
@@ -497,9 +548,11 @@ describe('CreateProductUseCase Tests', () => {
         const error = new Error('Upload failed');
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: [],
         };
 
         const mockCategory = {
@@ -508,13 +561,15 @@ describe('CreateProductUseCase Tests', () => {
             isActive: true,
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById.mockResolvedValue(mockCategory);
         uploadImage.mockRejectedValue(error);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
-            'Failed to create product: Upload failed',
-        );
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('Failed to create product: Upload failed');
+        expect(result.error.statusCode).toBe(500);
 
         expect(log.error).toHaveBeenCalledWith(
             'Error in createProductUseCase',
@@ -539,9 +594,11 @@ describe('CreateProductUseCase Tests', () => {
         const error = new Error('DB error');
 
         const mockStore = {
+            _id: 'store1',
             id: 'store1',
             userId: 'seller1',
             status: 'Approved',
+            categoryIds: [],
         };
 
         const mockCategory = {
@@ -550,14 +607,16 @@ describe('CreateProductUseCase Tests', () => {
             isActive: true,
         };
 
-        storeRepository.findById.mockResolvedValue(mockStore);
+        storeRepository.findByIdOrSlug.mockResolvedValue(mockStore);
         categoryRepository.findById.mockResolvedValue(mockCategory);
         uploadImage.mockResolvedValue('https://example.com/main.jpg');
         productRepository.create.mockRejectedValue(error);
 
-        await expect(useCase(productData, mainImageFile)).rejects.toThrow(
-            'Failed to create product: DB error',
-        );
+        const result = await useCase(productData, mainImageFile);
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('Failed to create product: DB error');
+        expect(result.error.statusCode).toBe(500);
 
         expect(log.error).toHaveBeenCalledWith(
             'Error in createProductUseCase',

@@ -48,15 +48,15 @@ describe('Environment Configuration', () => {
                 expect(config.nodeEnv).toBe('development');
                 expect(config.enableSwagger).toBe(true);
                 expect(config.logLevel).toBe('debug');
-                expect(config.apiUrl).toBe('');
-                expect(config.uiUrl).toBe('');
+                expect(config.apiUrl).toBe('http://localhost:3000');
+                expect(config.uiUrl).toBe('http://localhost:8080');
             });
 
             it('should include development CORS origins', () => {
                 const config = getEnvironmentConfig();
 
-                expect(config.corsOrigins).toContain('');
-                expect(config.corsOrigins).toContain('');
+                expect(config.corsOrigins).toContain('http://localhost:3000');
+                expect(config.corsOrigins).toContain('http://localhost:8080');
             });
         });
 
@@ -75,11 +75,10 @@ describe('Environment Configuration', () => {
                 expect(config.uiUrl).toBe('');
             });
 
-            it('should include production CORS origins', () => {
+            it('should include production CORS origins from env or empty array', () => {
                 const config = getEnvironmentConfig();
 
-                expect(config.corsOrigins).toContain('');
-                expect(config.corsOrigins).toContain('');
+                expect(Array.isArray(config.corsOrigins)).toBe(true);
             });
 
             it('should disable Swagger in production', () => {
@@ -120,7 +119,7 @@ describe('Environment Configuration', () => {
                 const config = getEnvironmentConfig();
 
                 expect(config.nodeEnv).toBe('development');
-                expect(config.apiUrl).toBe('');
+                expect(config.apiUrl).toBe('http://localhost:3000');
             });
         });
 

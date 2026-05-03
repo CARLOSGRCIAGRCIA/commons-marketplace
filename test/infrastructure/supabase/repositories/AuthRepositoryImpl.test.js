@@ -2,6 +2,21 @@ import { AuthRepositoryImpl } from '../../../../src/infrastructure/supabase/repo
 import supabase from '../../../../src/infrastructure/supabase/config/supabaseClient.js';
 import { log } from '../../../../src/infrastructure/logger/logger.js';
 
+jest.mock('../../../../src/infrastructure/resilience/circuitBreaker.js', () => {
+    const mockExecute = jest.fn((fn) => fn());
+    return {
+        circuitRegistry: {
+            getOrCreate: jest.fn().mockReturnValue({
+                execute: mockExecute,
+                getStatus: jest.fn(),
+                reset: jest.fn(),
+            }),
+            getAllStatus: jest.fn(),
+            resetAll: jest.fn(),
+        },
+    };
+});
+
 jest.mock('../../../../src/infrastructure/supabase/config/supabaseClient.js', () => ({
     auth: {
         signUp: jest.fn(),

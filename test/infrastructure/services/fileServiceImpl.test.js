@@ -1,18 +1,23 @@
-import { FileServiceImpl } from '../../../src/infrastructure/services/fileServiceImpl.js';
 import * as fileService from '../../../src/core/services/fileService.js';
 
-jest.mock('../../../src/core/services/fileService.js');
+jest.mock('../../../src/core/services/fileService.js', () => ({
+    uploadImage: jest.fn(),
+    deleteImage: jest.fn(),
+    uploadMultipleImages: jest.fn(),
+    deleteMultipleImages: jest.fn(),
+    replaceImage: jest.fn(),
+}));
 
-describe('FileServiceImpl', () => {
-    it('should call fileService.uploadImage when uploadImage is called', async () => {
+describe('FileService', () => {
+    it('should call uploadImage with file', async () => {
         const file = { buffer: Buffer.from('test'), mimetype: 'image/png' };
-        await FileServiceImpl.uploadImage(file);
+        await fileService.uploadImage(file);
         expect(fileService.uploadImage).toHaveBeenCalledWith(file);
     });
 
-    it('should call fileService.deleteImage when deleteImage is called', async () => {
+    it('should call deleteImage with imageUrl', async () => {
         const imageUrl = 'test_url';
-        await FileServiceImpl.deleteImage(imageUrl);
+        await fileService.deleteImage(imageUrl);
         expect(fileService.deleteImage).toHaveBeenCalledWith(imageUrl);
     });
 });

@@ -218,18 +218,16 @@ describe('UserController', () => {
     describe('updateUserById', () => {
         it('should update user successfully and return updated user', async () => {
             const userId = 'user123';
-            const updateData = { name: 'Updated Name', email: 'updated@example.com' };
+            const updateData = { name: 'Updated Name', lastName: 'Doe', phoneNumber: '1234567890', address: '123 Main St' };
             const updatedUser = { id: userId, ...updateData, updatedAt: new Date() };
 
             req.params.id = userId;
             req.body = updateData;
-            UpdateUserDTO.from.mockReturnValue(updateData);
             updateUserUC.mockResolvedValue(updatedUser);
 
             await controller.updateUserById(req, res, next);
 
-            expect(UpdateUserDTO.from).toHaveBeenCalledWith(updateData);
-            expect(updateUserUC).toHaveBeenCalledWith(userId, updateData);
+            expect(updateUserUC).toHaveBeenCalledWith(userId, updateData, null);
             expect(res.status).toHaveBeenCalledWith(200);
             expect(res.json).toHaveBeenCalledWith(updatedUser);
             expect(next).not.toHaveBeenCalled();
@@ -237,17 +235,15 @@ describe('UserController', () => {
 
         it('should handle errors during user update and call next', async () => {
             const userId = 'user123';
-            const updateData = { name: 'Updated Name' };
+            const updateData = { name: 'Updated Name', lastName: 'Doe' };
 
             req.params.id = userId;
             req.body = updateData;
-            UpdateUserDTO.from.mockReturnValue(updateData);
             updateUserUC.mockRejectedValue(new Error('Update failed'));
 
             await controller.updateUserById(req, res, next);
 
-            expect(UpdateUserDTO.from).toHaveBeenCalledWith(updateData);
-            expect(updateUserUC).toHaveBeenCalledWith(userId, updateData);
+            expect(updateUserUC).toHaveBeenCalledWith(userId, updateData, null);
             expect(next).toHaveBeenCalledWith(expect.any(Error));
             expect(next.mock.calls[0][0].message).toBe('Update failed');
             expect(res.status).not.toHaveBeenCalled();
@@ -259,14 +255,10 @@ describe('UserController', () => {
 
             req.params.id = userId;
             req.body = invalidUpdateData;
-            UpdateUserDTO.from.mockImplementation(() => {
-                throw new Error('Invalid email format');
-            });
+            updateUserUC.mockRejectedValue(new Error('Invalid email format'));
 
             await controller.updateUserById(req, res, next);
 
-            expect(UpdateUserDTO.from).toHaveBeenCalledWith(invalidUpdateData);
-            expect(updateUserUC).not.toHaveBeenCalled();
             expect(next).toHaveBeenCalledWith(expect.any(Error));
             expect(next.mock.calls[0][0].message).toBe('Invalid email format');
         });

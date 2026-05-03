@@ -13,6 +13,9 @@ jest.mock('../src/infrastructure/supabase/config/supabaseClient.js', () => ({
                 remove: jest.fn().mockResolvedValue({ data: null, error: null }),
             }),
         },
+        auth: {
+            getUser: jest.fn().mockResolvedValue({ data: { user: { id: 'test-user' } }, error: null }),
+        },
     },
     supabaseAdmin: {
         storage: {

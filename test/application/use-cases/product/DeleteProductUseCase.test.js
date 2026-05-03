@@ -8,6 +8,7 @@ jest.mock('../../../../src/core/services/fileService.js');
 
 describe('DeleteProductUseCase Tests', () => {
     let productRepository;
+    let storeRepository;
     let useCase;
 
     beforeEach(() => {
@@ -15,7 +16,10 @@ describe('DeleteProductUseCase Tests', () => {
             findById: jest.fn(),
             deleteById: jest.fn(),
         };
-        useCase = deleteProductUseCase(productRepository);
+        storeRepository = {
+            decrementProductCount: jest.fn(),
+        };
+        useCase = deleteProductUseCase(productRepository, storeRepository);
 
         jest.clearAllMocks();
     });
@@ -24,6 +28,7 @@ describe('DeleteProductUseCase Tests', () => {
         const mockProduct = {
             id: '1',
             name: 'Test Product',
+            storeId: 'store1',
             mainImageUrl: 'https://example.com/main.jpg',
             imageUrls: ['https://example.com/img1.jpg', 'https://example.com/img2.jpg'],
         };
@@ -42,7 +47,9 @@ describe('DeleteProductUseCase Tests', () => {
             'https://example.com/img2.jpg',
         ]);
         expect(productRepository.deleteById).toHaveBeenCalledWith('1');
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(storeRepository.decrementProductCount).toHaveBeenCalledWith('store1');
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
         expect(log.info).toHaveBeenCalledWith('Attempting to delete product', { productId: '1' });
         expect(log.debug).toHaveBeenCalledWith(
             'Product found, proceeding with image deletion',
@@ -55,6 +62,7 @@ describe('DeleteProductUseCase Tests', () => {
         const mockProduct = {
             id: '1',
             name: 'Test Product',
+            storeId: 'store1',
             mainImageUrl: 'https://example.com/main.jpg',
             imageUrls: [],
         };
@@ -67,7 +75,8 @@ describe('DeleteProductUseCase Tests', () => {
 
         expect(deleteImage).toHaveBeenCalledWith('https://example.com/main.jpg');
         expect(deleteMultipleImages).not.toHaveBeenCalled();
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
     });
 
     it('should return null if the product is not found', async () => {
@@ -79,7 +88,8 @@ describe('DeleteProductUseCase Tests', () => {
         expect(deleteImage).not.toHaveBeenCalled();
         expect(deleteMultipleImages).not.toHaveBeenCalled();
         expect(productRepository.deleteById).not.toHaveBeenCalled();
-        expect(result).toBeNull();
+        expect(result.isOk).toBe(true);
+        expect(result.value).toBeNull();
         expect(log.warn).toHaveBeenCalledWith('Product not found for deletion', { productId: '1' });
     });
 
@@ -87,6 +97,7 @@ describe('DeleteProductUseCase Tests', () => {
         const mockProduct = {
             id: '1',
             name: 'Test Product',
+            storeId: 'store1',
             mainImageUrl: 'https://example.com/main.jpg',
             imageUrls: [],
         };
@@ -99,7 +110,8 @@ describe('DeleteProductUseCase Tests', () => {
 
         expect(deleteImage).toHaveBeenCalledWith('https://example.com/main.jpg');
         expect(productRepository.deleteById).toHaveBeenCalledWith('1');
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
         expect(log.warn).toHaveBeenCalledWith('Failed to delete main image', expect.any(Object));
     });
 
@@ -107,6 +119,7 @@ describe('DeleteProductUseCase Tests', () => {
         const mockProduct = {
             id: '1',
             name: 'Test Product',
+            storeId: 'store1',
             mainImageUrl: 'https://example.com/main.jpg',
             imageUrls: ['https://example.com/img1.jpg'],
         };
@@ -120,17 +133,19 @@ describe('DeleteProductUseCase Tests', () => {
 
         expect(deleteMultipleImages).toHaveBeenCalledWith(['https://example.com/img1.jpg']);
         expect(productRepository.deleteById).toHaveBeenCalledWith('1');
-        expect(result).toEqual(createProductResponseDTO(mockProduct));
+        expect(result.isOk).toBe(true);
+        expect(result.value).toEqual(createProductResponseDTO(mockProduct));
         expect(log.warn).toHaveBeenCalledWith(
             'Failed to delete additional images',
             expect.any(Object),
         );
     });
 
-    it('should handle repository errors', async () => {
+    it('should return an error on repository failure', async () => {
         const mockProduct = {
             id: '1',
             name: 'Test Product',
+            storeId: 'store1',
             mainImageUrl: 'https://example.com/main.jpg',
             imageUrls: [],
         };
@@ -140,7 +155,11 @@ describe('DeleteProductUseCase Tests', () => {
         deleteImage.mockResolvedValue(true);
         productRepository.deleteById.mockRejectedValue(error);
 
-        await expect(useCase('1')).rejects.toThrow('Failed to delete product: DB error');
+        const result = await useCase('1');
+
+        expect(result.isErr).toBe(true);
+        expect(result.error.message).toBe('Failed to delete product: DB error');
+        expect(result.error.statusCode).toBe(500);
         expect(log.error).toHaveBeenCalledWith('Error in deleteProductUseCase', expect.any(Object));
     });
 });

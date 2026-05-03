@@ -394,7 +394,7 @@ describe('StoreController', () => {
             };
 
             req.params.id = storeId;
-            deleteStoreUseCase.mockResolvedValue(deletedStore);
+            deleteStoreUseCase.mockResolvedValue({ isOk: true, isErr: false, value: deletedStore });
 
             await controller.deleteStore(req, res, next);
 
@@ -409,7 +409,7 @@ describe('StoreController', () => {
             const storeId = 'nonexistent';
 
             req.params.id = storeId;
-            deleteStoreUseCase.mockResolvedValue(null);
+            deleteStoreUseCase.mockResolvedValue({ isOk: true, isErr: false, value: null });
 
             await controller.deleteStore(req, res, next);
 
@@ -444,7 +444,7 @@ describe('StoreController', () => {
             };
 
             req.params.id = differentStoreId;
-            deleteStoreUseCase.mockResolvedValue(deletedStore);
+            deleteStoreUseCase.mockResolvedValue({ isOk: true, isErr: false, value: deletedStore });
 
             await controller.deleteStore(req, res, next);
 
@@ -494,7 +494,7 @@ describe('StoreController', () => {
         it('should handle missing params.id for deleteStore', async () => {
             req.params = {};
 
-            deleteStoreUseCase.mockResolvedValue(null);
+            deleteStoreUseCase.mockResolvedValue({ isErr: true, isOk: false, error: { message: 'Store ID is required', statusCode: 400, code: 'VALIDATION_ERROR' } });
 
             await controller.deleteStore(req, res, next);
 

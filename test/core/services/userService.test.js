@@ -283,7 +283,7 @@ describe('UserService', () => {
                 lastName: 'User',
                 profilePicUrl: 'http://example.com/pic.jpg',
                 email: 'test@example.com',
-                isApprovedSeller: true,
+                role: 'seller',
             };
             UserRepository.findById.mockResolvedValue(mockUser);
 
@@ -295,7 +295,7 @@ describe('UserService', () => {
                 lastName: 'User',
                 profilePicUrl: 'http://example.com/pic.jpg',
                 email: 'test@example.com',
-                isApprovedSeller: true,
+                role: 'seller',
             });
             expect(UserRepository.findById).toHaveBeenCalledWith(mockUserId);
         });
@@ -311,7 +311,7 @@ describe('UserService', () => {
                 lastName: '',
                 profilePicUrl: null,
                 email: null,
-                isApprovedSeller: false,
+                role: 'buyer',
             });
             expect(log.warn).toHaveBeenCalledWith('User not found, returning default info', {
                 userId: 'nonexistent_id',
@@ -323,11 +323,11 @@ describe('UserService', () => {
 
             expect(result).toEqual({
                 id: '',
-                name: 'User',
+                name: 'Usuario',
                 lastName: '',
                 profilePicUrl: null,
                 email: null,
-                isApprovedSeller: false,
+                role: 'buyer',
             });
             expect(UserRepository.findById).not.toHaveBeenCalled();
         });
@@ -337,11 +337,11 @@ describe('UserService', () => {
 
             expect(result).toEqual({
                 id: null,
-                name: 'User',
+                name: 'Usuario',
                 lastName: '',
                 profilePicUrl: null,
                 email: null,
-                isApprovedSeller: false,
+                role: 'buyer',
             });
             expect(UserRepository.findById).not.toHaveBeenCalled();
         });
@@ -353,7 +353,7 @@ describe('UserService', () => {
                 lastName: null,
                 profilePicUrl: null,
                 email: null,
-                isApprovedSeller: false,
+                role: 'buyer',
             };
             UserRepository.findById.mockResolvedValue(mockUser);
 
@@ -365,7 +365,7 @@ describe('UserService', () => {
                 lastName: '',
                 profilePicUrl: null,
                 email: null,
-                isApprovedSeller: false,
+                role: 'buyer',
             });
         });
 
@@ -380,7 +380,7 @@ describe('UserService', () => {
                 lastName: '',
                 profilePicUrl: null,
                 email: null,
-                isApprovedSeller: false,
+                role: 'buyer',
             });
             expect(log.error).toHaveBeenCalledWith('Error getting user basic info', {
                 userId: mockUserId,

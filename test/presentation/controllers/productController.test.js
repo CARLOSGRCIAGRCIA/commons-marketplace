@@ -57,7 +57,7 @@ describe('ProductController Tests', () => {
                 mainImage: [{ filename: 'main.jpg' }],
                 additionalImages: [{ filename: 'img1.jpg' }],
             };
-            createProductUseCase.mockResolvedValue(mockProduct);
+            createProductUseCase.mockResolvedValue({ isOk: true, isErr: false, value: mockProduct });
 
             await productController.createProduct(req, res, next);
 
@@ -335,7 +335,7 @@ describe('ProductController Tests', () => {
                     hasPrevPage: false,
                 },
             };
-            req.params.storeId = 'store123';
+            req.params.storeIdOrSlug = 'store123';
             req.query = { page: '1', limit: '10' };
             getStoreProductsUseCase.mockResolvedValue(mockPaginatedResult);
 
@@ -362,7 +362,7 @@ describe('ProductController Tests', () => {
                     hasPrevPage: false,
                 },
             };
-            req.params.storeId = 'store123';
+            req.params.storeIdOrSlug = 'store123';
             req.query = { page: '1', limit: '10', sortBy: 'price', order: 'desc' };
             getStoreProductsUseCase.mockResolvedValue(mockPaginatedResult);
 
@@ -388,7 +388,7 @@ describe('ProductController Tests', () => {
                     hasPrevPage: false,
                 },
             };
-            req.params.storeId = 'store123';
+            req.params.storeIdOrSlug = 'store123';
             req.query = {};
             getStoreProductsUseCase.mockResolvedValue(mockPaginatedResult);
 
@@ -405,7 +405,7 @@ describe('ProductController Tests', () => {
     describe('getProductById', () => {
         it('should return 200 with the product on success', async () => {
             const mockProduct = { id: '1', name: 'Test Product' };
-            req.params.id = '1';
+            req.params.idOrSlug = '1';
             getProductByIdUseCase.mockResolvedValue(mockProduct);
 
             await productController.getProductById(req, res, next);
@@ -416,7 +416,7 @@ describe('ProductController Tests', () => {
         });
 
         it('should return 404 if product is not found', async () => {
-            req.params.id = '1';
+            req.params.idOrSlug = '1';
             getProductByIdUseCase.mockResolvedValue(null);
 
             await productController.getProductById(req, res, next);
@@ -427,7 +427,7 @@ describe('ProductController Tests', () => {
 
         it('should call next with error on failure', async () => {
             const error = new Error('Failed to fetch by id');
-            req.params.id = '1';
+            req.params.idOrSlug = '1';
             getProductByIdUseCase.mockRejectedValue(error);
 
             await productController.getProductById(req, res, next);
@@ -550,7 +550,7 @@ describe('ProductController Tests', () => {
     describe('deleteProduct', () => {
         it('should return 204 on successful deletion', async () => {
             req.params.id = '1';
-            deleteProductUseCase.mockResolvedValue({ id: '1' });
+            deleteProductUseCase.mockResolvedValue({ isOk: true, isErr: false, value: { id: '1' } });
 
             await productController.deleteProduct(req, res, next);
 
@@ -561,7 +561,7 @@ describe('ProductController Tests', () => {
 
         it('should return 404 if product to delete is not found', async () => {
             req.params.id = '1';
-            deleteProductUseCase.mockResolvedValue(null);
+            deleteProductUseCase.mockResolvedValue({ isOk: true, isErr: false, value: null });
 
             await productController.deleteProduct(req, res, next);
 

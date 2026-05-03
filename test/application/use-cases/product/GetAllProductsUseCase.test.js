@@ -1,6 +1,10 @@
+import { jest } from '@jest/globals';
+
+jest.mock('../../../../src/infrastructure/cache/cacheManager.js');
+
 import { getAllProductsUseCase } from '../../../../src/application/use-cases/product/GetAllProductsUseCase.js';
 import { log } from '../../../../src/infrastructure/logger/logger.js';
-import { jest } from '@jest/globals';
+import { cacheManager, CACHE_TTL } from '../../../../src/infrastructure/cache/cacheManager.js';
 
 describe('GetAllProductsUseCase Tests', () => {
     let productRepository;
@@ -12,6 +16,8 @@ describe('GetAllProductsUseCase Tests', () => {
         };
         useCase = getAllProductsUseCase(productRepository);
         jest.clearAllMocks();
+        cacheManager.get.mockReturnValue(null);
+        CACHE_TTL.PRODUCTS = 300;
     });
 
     it('should return a paginated list of products', async () => {
@@ -60,49 +66,36 @@ describe('GetAllProductsUseCase Tests', () => {
         expect(log.debug).toHaveBeenCalledWith('Fetching all products', expect.any(Object));
         expect(log.info).toHaveBeenCalledWith('Products fetched successfully', expect.any(Object));
 
-        expect(result).toEqual({
-            products: [
-                {
-                    id: '1',
-                    name: 'Product 1',
-                    description: 'Description 1',
-                    price: 10,
-                    stock: 5,
-                    categoryId: 'cat1',
-                    subCategoryId: null,
-                    sellerId: 'seller1',
-                    storeId: 'store1',
-                    mainImageUrl: 'img1.jpg',
-                    imageUrls: [],
-                    status: 'Active',
-                    createdAt: '2023-01-01',
-                    updatedAt: '2023-01-01',
-                },
-                {
-                    id: '2',
-                    name: 'Product 2',
-                    description: 'Description 2',
-                    price: 20,
-                    stock: 10,
-                    categoryId: 'cat2',
-                    subCategoryId: null,
-                    sellerId: 'seller2',
-                    storeId: 'store2',
-                    mainImageUrl: 'img2.jpg',
-                    imageUrls: [],
-                    status: 'Active',
-                    createdAt: '2023-01-02',
-                    updatedAt: '2023-01-02',
-                },
-            ],
-            pagination: {
-                totalItems: 2,
-                totalPages: 1,
-                currentPage: 1,
-                itemsPerPage: 10,
-                hasNextPage: false,
-                hasPrevPage: false,
-            },
+        expect(result.products).toHaveLength(2);
+        expect(result.products[0]).toEqual(
+            expect.objectContaining({
+                id: '1',
+                name: 'Product 1',
+                description: 'Description 1',
+                price: 10,
+                stock: 5,
+                mainImageUrl: 'img1.jpg',
+                status: 'Active',
+            }),
+        );
+        expect(result.products[1]).toEqual(
+            expect.objectContaining({
+                id: '2',
+                name: 'Product 2',
+                description: 'Description 2',
+                price: 20,
+                stock: 10,
+                mainImageUrl: 'img2.jpg',
+                status: 'Active',
+            }),
+        );
+        expect(result.pagination).toEqual({
+            totalItems: 2,
+            totalPages: 1,
+            currentPage: 1,
+            itemsPerPage: 10,
+            hasNextPage: false,
+            hasPrevPage: false,
         });
     });
 

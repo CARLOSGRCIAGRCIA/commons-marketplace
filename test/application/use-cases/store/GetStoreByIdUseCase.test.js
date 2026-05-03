@@ -10,23 +10,23 @@ describe('GetStoreByIdUseCase', () => {
 
     beforeEach(() => {
         mockStoreRepository = {
-            findById: jest.fn(),
+            findByIdOrSlug: jest.fn(),
         };
         useCase = getStoreByIdUseCase(mockStoreRepository);
     });
 
     it('should return store when found', async () => {
         const mockStore = { _id: 'store123', storeName: 'My Store' };
-        mockStoreRepository.findById.mockResolvedValue(mockStore);
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue(mockStore);
 
         const result = await useCase('store123');
 
         expect(result).toBeDefined();
-        expect(mockStoreRepository.findById).toHaveBeenCalledWith('store123');
+        expect(mockStoreRepository.findByIdOrSlug).toHaveBeenCalledWith('store123');
     });
 
     it('should return null when store not found', async () => {
-        mockStoreRepository.findById.mockResolvedValue(null);
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue(null);
 
         const result = await useCase('store123');
 
@@ -34,14 +34,14 @@ describe('GetStoreByIdUseCase', () => {
     });
 
     it('should throw error when storeId is missing', async () => {
-        await expect(useCase()).rejects.toThrow('Store ID is required.');
-        await expect(useCase(null)).rejects.toThrow('Store ID is required.');
-        await expect(useCase('')).rejects.toThrow('Store ID is required.');
+        await expect(useCase()).rejects.toThrow('Store ID or slug is required.');
+        await expect(useCase(null)).rejects.toThrow('Store ID or slug is required.');
+        await expect(useCase('')).rejects.toThrow('Store ID or slug is required.');
     });
 
     it('should map store to DTO', async () => {
         const mockStore = { _id: 'store123', storeName: 'My Store' };
-        mockStoreRepository.findById.mockResolvedValue(mockStore);
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue(mockStore);
 
         const result = await useCase('store123');
 
@@ -49,7 +49,7 @@ describe('GetStoreByIdUseCase', () => {
     });
 
     it('should handle repository errors', async () => {
-        mockStoreRepository.findById.mockRejectedValue(new Error('DB error'));
+        mockStoreRepository.findByIdOrSlug.mockRejectedValue(new Error('DB error'));
 
         await expect(useCase('store123')).rejects.toThrow('DB error');
     });

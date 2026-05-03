@@ -14,13 +14,13 @@ describe('GetStoreProductsUseCase', () => {
             findByStoreId: jest.fn(),
         };
         mockStoreRepository = {
-            findById: jest.fn(),
+            findByIdOrSlug: jest.fn(),
         };
         useCase = getStoreProductsUseCase(mockProductRepository, mockStoreRepository);
     });
 
     it('should return products for a store', async () => {
-        mockStoreRepository.findById.mockResolvedValue({ _id: 'store123' });
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue({ _id: 'store123' });
         mockProductRepository.findByStoreId.mockResolvedValue({
             data: [{ _id: 'prod1', name: 'Product 1' }],
             totalItems: 1,
@@ -29,17 +29,17 @@ describe('GetStoreProductsUseCase', () => {
         const result = await useCase('store123');
 
         expect(result.data).toHaveLength(1);
-        expect(mockStoreRepository.findById).toHaveBeenCalledWith('store123');
+        expect(mockStoreRepository.findByIdOrSlug).toHaveBeenCalledWith('store123');
     });
 
     it('should throw error when store not found', async () => {
-        mockStoreRepository.findById.mockResolvedValue(null);
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue(null);
 
         await expect(useCase('store123')).rejects.toThrow('Store not found');
     });
 
     it('should return empty array when no products exist', async () => {
-        mockStoreRepository.findById.mockResolvedValue({ _id: 'store123' });
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue({ _id: 'store123' });
         mockProductRepository.findByStoreId.mockResolvedValue({
             data: [],
             totalItems: 0,
@@ -51,7 +51,7 @@ describe('GetStoreProductsUseCase', () => {
     });
 
     it('should pass pagination params to repository', async () => {
-        mockStoreRepository.findById.mockResolvedValue({ _id: 'store123' });
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue({ _id: 'store123' });
         mockProductRepository.findByStoreId.mockResolvedValue({
             data: [],
             totalItems: 0,
@@ -67,7 +67,7 @@ describe('GetStoreProductsUseCase', () => {
     });
 
     it('should handle repository errors', async () => {
-        mockStoreRepository.findById.mockResolvedValue({ _id: 'store123' });
+        mockStoreRepository.findByIdOrSlug.mockResolvedValue({ _id: 'store123' });
         mockProductRepository.findByStoreId.mockRejectedValue(new Error('DB error'));
 
         await expect(useCase('store123')).rejects.toThrow('DB error');

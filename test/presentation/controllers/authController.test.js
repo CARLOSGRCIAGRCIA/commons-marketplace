@@ -15,6 +15,7 @@ describe('AuthController Tests', () => {
     let registerUC;
     let loginUC;
     let logoutUC;
+    let refreshTokenUC;
     let authController;
 
     beforeEach(() => {
@@ -28,8 +29,9 @@ describe('AuthController Tests', () => {
         registerUC = jest.fn();
         loginUC = jest.fn();
         logoutUC = jest.fn();
+        refreshTokenUC = jest.fn();
 
-        authController = createAuthController(registerUC, loginUC, logoutUC);
+        authController = createAuthController(registerUC, loginUC, logoutUC, refreshTokenUC);
 
         jest.clearAllMocks();
     });
@@ -118,6 +120,46 @@ describe('AuthController Tests', () => {
             logoutUC.mockRejectedValue(error);
 
             await authController.logout(req, res, next);
+
+            expect(next).toHaveBeenCalledWith(error);
+        });
+    });
+
+    describe('RefreshToken Controller Tests', () => {
+        it('should return 200 with new token on successful refresh', async () => {
+            req.body = { refreshToken: 'valid-refresh-token' };
+            const mockResponse = {
+                message: 'Login successful',
+                token: 'new-access-token',
+                expiresAt: 1234567890,
+            };
+
+            refreshTokenUC.mockResolvedValue(mockResponse);
+
+            await authController.refreshToken(req, res, next);
+
+            expect(refreshTokenUC).toHaveBeenCalledWith('valid-refresh-token');
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith(mockResponse);
+        });
+
+        it('should return 400 when refresh token is missing', async () => {
+            req.body = {};
+
+            await authController.refreshToken(req, res, next);
+
+            expect(res.status).toHaveBeenCalledWith(400);
+            expect(res.json).toHaveBeenCalledWith({ error: 'Refresh token is required' });
+            expect(refreshTokenUC).not.toHaveBeenCalled();
+        });
+
+        it('should call next with error on refresh failure', async () => {
+            req.body = { refreshToken: 'invalid-refresh-token' };
+            const error = new Error('Session expired');
+
+            refreshTokenUC.mockRejectedValue(error);
+
+            await authController.refreshToken(req, res, next);
 
             expect(next).toHaveBeenCalledWith(error);
         });

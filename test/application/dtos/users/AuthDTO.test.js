@@ -66,13 +66,23 @@ describe('AuthDTO', () => {
 
     describe('loginResponse', () => {
         it('should create response with token and default message', () => {
-            const result = AuthDTO.loginResponse('token123');
+            const mockSession = { access_token: 'token123', refresh_token: 'refresh123', expires_at: 1234567890 };
+            const result = AuthDTO.loginResponse(mockSession);
             expect(result.message).toBe('Login successful');
             expect(result.token).toBe('token123');
+            expect(result.refreshToken).toBe('refresh123');
+            expect(result.expiresAt).toBe(1234567890);
+        });
+
+        it('should use extra token when session access_token is missing', () => {
+            const mockSession = {};
+            const result = AuthDTO.loginResponse(mockSession, { token: 'extra-token' });
+            expect(result.token).toBe('extra-token');
         });
 
         it('should use custom message when provided', () => {
-            const result = AuthDTO.loginResponse('token123', 'Welcome back!');
+            const mockSession = { access_token: 'token123' };
+            const result = AuthDTO.loginResponse(mockSession, {}, 'Welcome back!');
             expect(result.message).toBe('Welcome back!');
         });
     });

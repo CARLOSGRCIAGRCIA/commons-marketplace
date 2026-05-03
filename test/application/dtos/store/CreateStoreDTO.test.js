@@ -11,14 +11,19 @@ describe('CreateStoreDTO Tests', () => {
 
         const dto = createCreateStoreDTO(data);
 
-        expect(dto).toEqual({
-            userId: 'user123',
-            storeName: 'My Test Store',
-            description: 'A test store description',
-            logo: 'https://example.com/logo.jpg',
-            categoryIds: [],
-            productCount: 0,
-        });
+        expect(dto).toEqual(
+            expect.objectContaining({
+                userId: 'user123',
+                storeName: 'My Test Store',
+                description: 'A test store description',
+                logo: 'https://example.com/logo.jpg',
+                categoryIds: [],
+                productCount: 0,
+                seoTitle: 'My Test Store',
+                seoDescription: 'A test store description',
+            }),
+        );
+        expect(dto.slug).toMatch(/^my-test-store-\w+$/);
         expect(Object.isFrozen(dto)).toBe(true);
     });
 
@@ -30,14 +35,19 @@ describe('CreateStoreDTO Tests', () => {
 
         const dto = createCreateStoreDTO(data);
 
-        expect(dto).toEqual({
-            userId: 'user123',
-            storeName: 'My Test Store',
-            description: '',
-            logo: null,
-            categoryIds: [],
-            productCount: 0,
-        });
+        expect(dto).toEqual(
+            expect.objectContaining({
+                userId: 'user123',
+                storeName: 'My Test Store',
+                description: '',
+                logo: null,
+                categoryIds: [],
+                productCount: 0,
+                seoTitle: 'My Test Store',
+                seoDescription: '',
+            }),
+        );
+        expect(dto.slug).toMatch(/^my-test-store-\w+$/);
         expect(Object.isFrozen(dto)).toBe(true);
     });
 
