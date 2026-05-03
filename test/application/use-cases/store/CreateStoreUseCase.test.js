@@ -1,6 +1,5 @@
 import { createStoreUseCase } from '../../../../src/application/use-cases/store/CreateStoreUseCase.js';
 import {
-    createCreateStoreDTO,
     createStoreResponseDTO,
 } from '../../../../src/application/dtos/stores/index.js';
 

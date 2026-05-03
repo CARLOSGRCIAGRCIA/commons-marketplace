@@ -10,6 +10,10 @@
  * @property {string} storeId - The ID of the store this product belongs to.
  * @property {string} mainImageUrl - The URL of the main product image.
  * @property {string[]} [imageUrls] - Array of additional product images.
+ * @property {string} [slug] - The product slug.
+ * @property {string} [seoTitle] - The SEO title.
+ * @property {string} [seoDescription] - The SEO description.
+ * @property {string} [ogImage] - The Open Graph image URL.
  */
 
 /**
@@ -25,6 +29,10 @@
  * @param {string} data.storeId - The ID of the store this product belongs to.
  * @param {string} data.mainImageUrl - The URL of the main product image.
  * @param {string[]} [data.imageUrls] - Array of additional product images.
+ * @param {string} [data.slug] - The product slug.
+ * @param {string} [data.seoTitle] - The SEO title.
+ * @param {string} [data.seoDescription] - The SEO description.
+ * @param {string} [data.ogImage] - The Open Graph image URL.
  * @returns {CreateProductDTO} A new DTO object.
  */
 export function createCreateProductDTO({

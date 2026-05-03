@@ -147,7 +147,7 @@ export const AuthRepositoryImpl = {
                 log.info('Attempting token refresh');
 
                 const { data, error } = await supabase.auth.refreshSession({
-                    refresh_token: refreshToken,
+                    refresh_token: refreshToken, // eslint-disable-line camelcase
                 });
 
                 if (error) {

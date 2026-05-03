@@ -1,6 +1,5 @@
 import { registerUseCase } from '../../../../src/application/use-cases/auth/RegisterUseCase.js';
 import { AuthDTO } from '../../../../src/application/dtos/users/AuthDTO.js';
-import { CreateUserDTO } from '../../../../src/application/dtos/users/CreateUserDTO.js';
 import { UserResponseDTO } from '../../../../src/application/dtos/users/UserResponseDTO.js';
 
 describe('RegisterUseCase', () => {
@@ -35,7 +34,7 @@ describe('RegisterUseCase', () => {
         const authDTO = { email: 'test@example.com', password: 'password' };
         const authResponse = { 
             user: { id: 'supabase_id' }, 
-            session: { access_token: 'token' } 
+            session: { access_token: 'token' }, // eslint-disable-line camelcase 
         };
         const createdUser = {
             _id: 'supabase_id',

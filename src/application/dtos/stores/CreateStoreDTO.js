@@ -6,6 +6,9 @@
  * @property {string} [logo] - An optional logo URL for the store.
  * @property {string[]} [categoryIds] - Array of category IDs the store sells.
  * @property {number} [productCount] - Number of products in the store.
+ * @property {string} [slug] - The store slug.
+ * @property {string} [seoTitle] - The SEO title.
+ * @property {string} [seoDescription] - The SEO description.
  */
 
 /**
@@ -17,6 +20,8 @@
  * @param {string} [data.logo] - An optional logo URL for the store.
  * @param {string[]} [data.categoryIds] - Array of category IDs.
  * @param {number} [data.productCount] - Product count (default 0).
+ * @param {string} [data.seoTitle] - The SEO title.
+ * @param {string} [data.seoDescription] - The SEO description.
  * @returns {CreateStoreDTO} The created and frozen DTO object.
  * @throws {Error} If required fields are missing.
  */

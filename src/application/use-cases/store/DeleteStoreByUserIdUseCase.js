@@ -11,7 +11,7 @@ import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
  * @param {object} storeRepository - The repository for store data.
  * @param {object} productRepository - The repository for product data.
  * @param {object} fileService - The file service for handling images.
- * @returns {function(string): Promise<Result>} A function to execute the use case.
+ * @returns {Function} A function to execute the use case.
  */
 export const deleteStoreUseCase = (storeRepository, productRepository, fileService) => async (storeId) => {
     try {

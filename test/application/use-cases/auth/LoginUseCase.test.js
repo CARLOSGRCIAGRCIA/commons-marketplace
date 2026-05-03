@@ -1,5 +1,4 @@
 import { loginUseCase } from '../../../../src/application/use-cases/auth/LoginUseCase.js';
-import { AuthDTO } from '../../../../src/application/dtos/users/AuthDTO.js';
 
 describe('LoginUseCase', () => {
     let authRepository;
@@ -21,8 +20,8 @@ describe('LoginUseCase', () => {
     it('should return a session when login is successful', async () => {
         const authDTO = { email: 'test@example.com', password: 'password' };
         const loginResponse = {
-            user: { id: 'user123', user_metadata: { name: 'Test' } },
-            session: { access_token: 'test_token', refresh_token: 'refresh_token', expires_at: 1234567890 },
+            user: { id: 'user123', user_metadata: { name: 'Test' } }, // eslint-disable-line camelcase
+            session: { access_token: 'test_token', refresh_token: 'refresh_token', expires_at: 1234567890 }, // eslint-disable-line camelcase
         };
         authRepository.signIn.mockResolvedValue(loginResponse);
         userRepository.findById.mockResolvedValue({ _id: 'user123', email: 'test@example.com', role: 'buyer' });
@@ -36,8 +35,8 @@ describe('LoginUseCase', () => {
     it('should create user in MongoDB if not found', async () => {
         const authDTO = { email: 'test@example.com', password: 'password' };
         const loginResponse = {
-            user: { id: 'supabase_id', user_metadata: { name: 'New User', role: 'buyer' } },
-            session: { access_token: 'test_token', refresh_token: 'refresh_token' },
+            user: { id: 'supabase_id', user_metadata: { name: 'New User', role: 'buyer' } }, // eslint-disable-line camelcase
+            session: { access_token: 'test_token', refresh_token: 'refresh_token' }, // eslint-disable-line camelcase
         };
         authRepository.signIn.mockResolvedValue(loginResponse);
         userRepository.findById.mockResolvedValue(null);

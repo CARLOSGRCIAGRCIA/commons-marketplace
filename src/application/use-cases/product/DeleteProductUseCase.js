@@ -16,7 +16,7 @@ export const deleteProductUseCase =
     /**
      * Executes the delete product use case.
      * @param {string} productId - The ID of the product to delete.
-     * @returns {Promise<Result>} Ok with the deleted product DTO or null, or Err with an error.
+     * @returns {Promise<object>} Ok with the deleted product DTO or null, or Err with an error.
      */
     async (productId) => {
         try {

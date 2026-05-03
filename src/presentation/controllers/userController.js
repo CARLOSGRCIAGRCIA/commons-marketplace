@@ -1,5 +1,4 @@
 import { CreateUserDTO } from '../../application/dtos/users/CreateUserDTO.js';
-import { UpdateUserDTO } from '../../application/dtos/users/UpdateUserDTO.js';
 
 export const createUserController = (
     createUserUC,

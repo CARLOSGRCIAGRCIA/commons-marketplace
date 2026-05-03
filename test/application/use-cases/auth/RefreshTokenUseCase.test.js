@@ -25,9 +25,9 @@ describe('RefreshTokenUseCase', () => {
             const mockSession = {
                 user: { id: 'user-123' },
                 session: {
-                    access_token: 'new-access-token',
-                    refresh_token: 'new-refresh-token',
-                    expires_at: 1234567890,
+                    access_token: 'new-access-token', // eslint-disable-line camelcase
+                    refresh_token: 'new-refresh-token', // eslint-disable-line camelcase
+                    expires_at: 1234567890, // eslint-disable-line camelcase
                 },
             };
 
@@ -50,7 +50,7 @@ describe('RefreshTokenUseCase', () => {
         it('should call logger with debug info', async () => {
             const mockSession = {
                 user: { id: 'user-123' },
-                session: { access_token: 'token' },
+                session: { access_token: 'token' }, // eslint-disable-line camelcase
             };
             mockAuthRepository.refreshSession.mockResolvedValue(mockSession);
 

@@ -26,7 +26,7 @@ export const createProductUseCase =
      * @param {object} productData - The product data to create.
      * @param {object} mainImageFile - The main image file (required).
      * @param {Array} [additionalImagesFiles] - Additional image files (max 5).
-     * @returns {Promise<Result>} Ok with the created product DTO, or Err with a DomainError.
+     * @returns {Promise<object>} Ok with the created product DTO, or Err with a DomainError.
      */
     async (productData, mainImageFile, additionalImagesFiles = []) => {
         log.info('Creating new product', {

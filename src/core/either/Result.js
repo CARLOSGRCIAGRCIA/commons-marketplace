@@ -41,7 +41,7 @@ export class Ok {
     /**
      * Chains a function that returns a Result.
      * @param {Function} fn - Function returning Result.
-     * @returns {Result} Result from fn.
+     * @returns {Ok|Err} Result from fn.
      */
     flatMap(fn) {
         return fn(this.value);
@@ -76,7 +76,7 @@ export class Ok {
      * Pattern matches on the result.
      * @param {object} handlers - Object with ok and err handlers.
      * @param {Function} handlers.ok - Handler for Ok.
-     * @param {Function} _err - Ignored handler for Err.
+     * @param {Function} handlers._err - Ignored handler for Err.
      * @returns {*} Result of ok handler.
      */
     match({ ok, _err }) {
@@ -154,7 +154,7 @@ export class Err {
     /**
      * Pattern matches on the result.
      * @param {object} handlers - Object with ok and err handlers.
-     * @param {Function} _ok - Ignored handler for Ok.
+     * @param {Function} handlers._ok - Ignored handler for Ok.
      * @param {Function} handlers.err - Handler for Err.
      * @returns {*} Result of err handler.
      */

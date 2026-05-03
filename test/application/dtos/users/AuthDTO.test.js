@@ -66,7 +66,7 @@ describe('AuthDTO', () => {
 
     describe('loginResponse', () => {
         it('should create response with token and default message', () => {
-            const mockSession = { access_token: 'token123', refresh_token: 'refresh123', expires_at: 1234567890 };
+            const mockSession = { access_token: 'token123', refresh_token: 'refresh123', expires_at: 1234567890 }; // eslint-disable-line camelcase
             const result = AuthDTO.loginResponse(mockSession);
             expect(result.message).toBe('Login successful');
             expect(result.token).toBe('token123');
@@ -81,7 +81,7 @@ describe('AuthDTO', () => {
         });
 
         it('should use custom message when provided', () => {
-            const mockSession = { access_token: 'token123' };
+            const mockSession = { access_token: 'token123' }; // eslint-disable-line camelcase
             const result = AuthDTO.loginResponse(mockSession, {}, 'Welcome back!');
             expect(result.message).toBe('Welcome back!');
         });
