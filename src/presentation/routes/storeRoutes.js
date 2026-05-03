@@ -1,7 +1,10 @@
 import express from 'express';
 import { authenticate } from '../middlewares/authMiddleware.js';
 import { isRole } from '../middlewares/authorizationMiddleware.js';
+import { validate } from '../middlewares/validationMiddleware.js';
+import { uploadLimiter } from '../middlewares/rateLimiter.js';
 import { upload } from '../../infrastructure/web/express.js';
+import * as StoreValidator from '../validators/storeValidator.js';
 
 /**
  * Factory function to create and configure the router for store-related endpoints.
@@ -12,93 +15,41 @@ import { upload } from '../../infrastructure/web/express.js';
 export function createStoreRoutes(storeController, canModifyStore) {
     const router = express.Router();
 
-    /**
-     * @route   GET /api/stores
-     * @desc    Get all approved stores (public).
-     * @access  public
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
     router.get('/', (req, res, next) => storeController.getAllStores(req, res, next));
 
-    /**
-     * @route   POST /api/stores
-     * @desc    Create a new store for the authenticated user.
-     * @access  private
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
-    router.post('/', authenticate, isRole('Seller'), upload.single('logo'), (req, res, next) =>
-        storeController.createStore(req, res, next),
+    router.post(
+        '/',
+        authenticate,
+        isRole('Seller', 'Admin'),
+        uploadLimiter,
+        StoreValidator.createStoreValidation(),
+        validate,
+        upload.single('logo'),
+        (req, res, next) => storeController.createStore(req, res, next),
     );
-    /**
-     * @route   GET /api/stores/:id
-     * @desc    Get a single store by ID (public).
-     * @access  public
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
-    router.get('/:id', (req, res, next) => storeController.getStoreById(req, res, next));
 
-    /**
-     * @route   GET /api/stores/:id/categories
-     * @desc    Get categories for a store with product counts (public).
-     * @access  public
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
+    router.get('/me', authenticate, isRole('Seller', 'Admin'), (req, res, next) =>
+        storeController.getMyStores(req, res, next),
+    );
+
+    router.get('/:idOrSlug', (req, res, next) => storeController.getStoreById(req, res, next));
+
     router.get('/:id/categories', (req, res, next) =>
         storeController.getStoreCategories(req, res, next),
     );
 
-    /**
-     * @route   GET /api/stores/me
-     * @desc    Get all stores owned by the authenticated user.
-     * @access  private
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
-    router.get('/me', authenticate, isRole('Seller'), (req, res, next) =>
-        storeController.getMyStores(req, res, next),
-    );
-
-    /**
-     * @route   PUT /api/stores/:id
-     * @desc    Update a store (owner or admin).
-     * @access  private
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
     router.put(
         '/:id',
         authenticate,
         isRole('Seller', 'Admin'),
         canModifyStore,
+        uploadLimiter,
+        StoreValidator.updateStoreValidation(),
+        validate,
         upload.single('logo'),
         (req, res, next) => storeController.updateStore(req, res, next),
     );
 
-    /**
-     * @route   DELETE /api/stores/:id
-     * @desc    Delete a store (owner or admin).
-     * @access  private
-     * @param {object} req - The Express request object.
-     * @param {object} res - The Express response object.
-     * @param {Function} next - The Express next middleware function.
-     * @returns {void}
-     */
     router.delete(
         '/:id',
         authenticate,
@@ -107,31 +58,21 @@ export function createStoreRoutes(storeController, canModifyStore) {
         (req, res, next) => storeController.deleteStore(req, res, next),
     );
 
-    /**
-     * @route   GET /api/stores/admin/pending
-     * @desc    Get all pending stores (admin only).
-     * @access  private
-     */
     router.get('/admin/pending', authenticate, isRole('Admin'), (req, res, next) =>
         storeController.getPendingStores(req, res, next),
     );
 
-    /**
-     * @route   GET /api/stores/admin/status/:status
-     * @desc    Get stores by status (admin only).
-     * @access  private
-     */
     router.get('/admin/status/:status', authenticate, isRole('Admin'), (req, res, next) =>
         storeController.getStoresByStatus(req, res, next),
     );
 
-    /**
-     * @route   PATCH /api/stores/admin/:id/status
-     * @desc    Update store status (admin only).
-     * @access  private
-     */
-    router.patch('/admin/:id/status', authenticate, isRole('Admin'), (req, res, next) =>
-        storeController.updateStoreStatus(req, res, next),
+    router.patch(
+        '/admin/:id/status',
+        authenticate,
+        isRole('Admin'),
+        StoreValidator.storeStatusValidation(),
+        validate,
+        (req, res, next) => storeController.updateStoreStatus(req, res, next),
     );
 
     return router;

@@ -36,9 +36,9 @@ export const createUserRoutes = (userController) => {
     router.put(
         '/:id',
         UserValidator.userIdParamValidation(),
-        UserValidator.updateUserValidation(),
         validate,
         authenticate,
+        upload.single('avatar'),
         userController.updateUserById,
     );
 
