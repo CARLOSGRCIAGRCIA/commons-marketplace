@@ -9,6 +9,13 @@ export const registerUseCase = (authRepository, userRepository) => async (authDT
         data: { role },
     });
 
+    if (authResponse.user && !authResponse.session) {
+        return {
+            needsEmailConfirmation: true,
+            message: 'Por favor, revisa tu correo electrónico para confirmar tu cuenta',
+        };
+    }
+
     const supabaseId = authResponse.user.id;
     const newUserDTO = {
         _id: supabaseId,
