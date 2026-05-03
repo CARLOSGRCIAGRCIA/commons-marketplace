@@ -1,4 +1,4 @@
-import supabase from '../../infrastructure/supabase/config/supabaseClient.js';
+import { supabaseAdmin as supabase } from '../../infrastructure/supabase/config/supabaseClient.js';
 import { internalServerError } from '../../presentation/exceptions/internalServerError.js';
 import { log } from '../../infrastructure/logger/logger.js';
 import sharp from 'sharp';
