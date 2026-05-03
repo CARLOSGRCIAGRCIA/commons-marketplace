@@ -15,9 +15,12 @@ export const AuthDTO = {
         password: data.password,
     }),
 
-    loginResponse: (token, message = 'Login successful') => ({
+    loginResponse: (session, extra = {}, message = 'Login successful') => ({
         message,
-        token,
+        token: session?.access_token || extra?.token,
+        refreshToken: session?.refresh_token,
+        expiresAt: session?.expires_at,
+        user: extra?.user || null,
     }),
 
     logoutResponse: (message = 'Logged out successfully') => ({

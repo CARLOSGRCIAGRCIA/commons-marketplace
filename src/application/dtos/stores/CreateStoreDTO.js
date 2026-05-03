@@ -20,14 +20,22 @@
  * @returns {CreateStoreDTO} The created and frozen DTO object.
  * @throws {Error} If required fields are missing.
  */
-export function createCreateStoreDTO({ userId, storeName, description, logo, categoryIds, productCount }) {
+export function createCreateStoreDTO({ userId, storeName, seoTitle, seoDescription, description, logo, categoryIds, productCount }) {
     if (!userId || !storeName) {
         throw new Error('userId and storeName are required to create a store.');
     }
 
+    const slug = storeName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+
     const dto = {
         userId: userId,
         storeName: storeName,
+        slug: slug,
+        seoTitle: seoTitle ?? storeName,
+        seoDescription: seoDescription ?? description ?? '',
         description: description ?? '',
         logo: logo ?? null,
         categoryIds: categoryIds ?? [],

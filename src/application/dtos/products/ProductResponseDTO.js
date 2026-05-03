@@ -28,9 +28,14 @@ export function createProductResponseDTO(product, options = {}) {
     if (!product) return null;
 
     const dto = {
+        _id: product._id?.toString() || product.id,
         id: product._id?.toString() || product.id,
         name: product.name,
+        slug: product.slug,
         description: product.description,
+        seoTitle: product.seoTitle,
+        seoDescription: product.seoDescription,
+        ogImage: product.ogImage || product.mainImageUrl,
         price: product.price,
         stock: product.stock,
         categoryId: product.categoryId,

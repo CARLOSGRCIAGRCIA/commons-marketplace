@@ -22,9 +22,14 @@ export function createStoreResponseDTO(store) {
 
     const dto = {
         id: store._id?.toString() || store.id,
+        _id: store._id?.toString() || store.id,
         userId: store.userId,
         storeName: store.storeName,
+        slug: store.slug,
         description: store.description,
+        seoTitle: store.seoTitle,
+        seoDescription: store.seoDescription,
+        ogImage: store.ogImage || store.logo,
         logo: store.logo || null,
         status: store.status,
         categoryIds: store.categoryIds || [],

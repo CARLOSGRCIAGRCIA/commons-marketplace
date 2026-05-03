@@ -14,6 +14,7 @@
  * @returns {object} The category response DTO.
  */
 export const categoryResponseDTO = (category) => ({
+    _id: category._id?.toString() || category.id,
     id: category._id?.toString() || category.id,
     name: category.name,
     slug: category.slug,

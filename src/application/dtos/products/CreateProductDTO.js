@@ -29,6 +29,9 @@
  */
 export function createCreateProductDTO({
     name,
+    slug,
+    seoTitle,
+    seoDescription,
     description,
     price,
     stock,
@@ -38,6 +41,7 @@ export function createCreateProductDTO({
     storeId,
     mainImageUrl,
     imageUrls = [],
+    ogImage,
 }) {
     if (
         !name ||
@@ -53,8 +57,16 @@ export function createCreateProductDTO({
         );
     }
 
+    const autoSlug = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') + '-' + Date.now().toString(36);
+
     return {
         name,
+        slug: slug || autoSlug,
+        seoTitle: seoTitle ?? name,
+        seoDescription: seoDescription ?? description?.slice(0, 160),
         description,
         price,
         stock,
@@ -64,5 +76,6 @@ export function createCreateProductDTO({
         storeId,
         mainImageUrl,
         imageUrls,
+        ogImage: ogImage || mainImageUrl,
     };
 }

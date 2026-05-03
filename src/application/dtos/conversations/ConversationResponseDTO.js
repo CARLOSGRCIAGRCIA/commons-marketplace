@@ -20,7 +20,7 @@ export const conversationResponseDTO = (conversation, currentUserId, participant
             lastName: participantsData[participantId].lastName,
             profilePicUrl: participantsData[participantId].profilePicUrl,
             email: participantsData[participantId].email,
-            isApprovedSeller: participantsData[participantId].isApprovedSeller,
+            role: participantsData[participantId].role,
         }),
     }));
 
