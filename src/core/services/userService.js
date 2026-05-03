@@ -79,12 +79,12 @@ export const getUserById = async (id) => {
 export const getUserBasicInfo = async (id) => {
     if (!id || typeof id !== 'string' || id.trim() === '') {
         return {
-            id: id,
-            name: 'User',
+            id,
+            name: 'Usuario',
             lastName: '',
             profilePicUrl: null,
             email: null,
-            isApprovedSeller: false,
+            role: 'buyer',
         };
     }
 
@@ -99,19 +99,19 @@ export const getUserBasicInfo = async (id) => {
                 lastName: user.lastName || '',
                 profilePicUrl: user.profilePicUrl || null,
                 email: user.email || null,
-                isApprovedSeller: user.isApprovedSeller || false,
-            };
-        } else {
-            log.warn('User not found, returning default info', { userId: trimmedId });
-            return {
-                id: trimmedId,
-                name: 'Usuario',
-                lastName: '',
-                profilePicUrl: null,
-                email: null,
-                isApprovedSeller: false,
+                role: user.role || 'buyer',
             };
         }
+
+        log.warn('User not found, returning default info', { userId: trimmedId });
+        return {
+            id: trimmedId,
+            name: 'Usuario',
+            lastName: '',
+            profilePicUrl: null,
+            email: null,
+            role: 'buyer',
+        };
     } catch (error) {
         log.error('Error getting user basic info', { userId: trimmedId, error: error.message });
         return {
@@ -120,7 +120,7 @@ export const getUserBasicInfo = async (id) => {
             lastName: '',
             profilePicUrl: null,
             email: null,
-            isApprovedSeller: false,
+            role: 'buyer',
         };
     }
 };

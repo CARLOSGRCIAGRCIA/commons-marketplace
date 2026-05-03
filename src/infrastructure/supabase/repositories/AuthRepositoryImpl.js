@@ -3,8 +3,28 @@ import { supabaseAdmin } from '../config/supabaseClient.js';
 import {
     badRequestException,
     invalidCredentialsException,
+    unauthorizedException,
 } from '../../../presentation/exceptions/index.js';
 import { log } from '../../logger/logger.js';
+import { circuitRegistry } from '../../resilience/circuitBreaker.js';
+
+const authCircuit = circuitRegistry.getOrCreate('supabase-auth', {
+    failureThreshold: 5,
+    timeout: 30000,
+});
+
+/**
+ * Execute Supabase auth operations through circuit breaker.
+ * @param {string} operation - Operation name.
+ * @param {Function} fn - Async function to execute.
+ * @returns {Promise<*>} Result of the function.
+ */
+const throughCircuit = async (operation, fn) => {
+    return authCircuit.execute(fn, () => {
+        log.warn(`Circuit breaker open for ${operation}, using fallback`);
+        throw new Error(`Authentication service temporarily unavailable (${operation})`);
+    });
+};
 
 /**
  * Supabase Auth Repository Implementation
@@ -24,26 +44,28 @@ export const AuthRepositoryImpl = {
      * @memberof AuthRepositoryImpl
      */
     signUp: async (email, password, options = {}) => {
-        try {
-            log.info('Attempting user signup', { email });
+        return throughCircuit('signUp', async () => {
+            try {
+                log.info('Attempting user signup', { email });
 
-            const { data, error } = await supabase.auth.signUp({
-                email,
-                password,
-                options,
-            });
+                const { data, error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options,
+                });
 
-            if (error) {
-                log.error('Signup failed', { email, error: error.message });
-                throw badRequestException(error.message);
+                if (error) {
+                    log.error('Signup failed', { email, error: error.message });
+                    throw badRequestException(error.message);
+                }
+
+                log.info('User signed up successfully', { email, userId: data.user?.id });
+                return data;
+            } catch (error) {
+                log.error('Exception in signUp', { email, error: error.message });
+                throw error;
             }
-
-            log.info('User signed up successfully', { email, userId: data.user?.id });
-            return data;
-        } catch (error) {
-            log.error('Exception in signUp', { email, error: error.message });
-            throw error;
-        }
+        });
     },
 
     /**
@@ -55,33 +77,35 @@ export const AuthRepositoryImpl = {
      * @memberof AuthRepositoryImpl
      */
     signIn: async (email, password) => {
-        try {
-            log.info('Attempting user signin', { email });
+        return throughCircuit('signIn', async () => {
+            try {
+                log.info('Attempting user signin', { email });
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
 
-            if (error) {
-                if (
-                    error.message.includes('Invalid login credentials') ||
-                    error.message.includes('invalid') ||
-                    error.status === 400
-                ) {
-                    log.warn('Invalid credentials attempt', { email });
-                    throw invalidCredentialsException(error.message);
+                if (error) {
+                    if (
+                        error.message.includes('Invalid login credentials') ||
+                        error.message.includes('invalid') ||
+                        error.status === 400
+                    ) {
+                        log.warn('Invalid credentials attempt', { email });
+                        throw invalidCredentialsException(error.message);
+                    }
+                    log.error('Signin failed', { email, error: error.message });
+                    throw badRequestException(error.message);
                 }
-                log.error('Signin failed', { email, error: error.message });
-                throw badRequestException(error.message);
-            }
 
-            log.info('User signed in successfully', { email, userId: data.user?.id });
-            return data;
-        } catch (error) {
-            log.error('Exception in signIn', { email, error: error.message });
-            throw error;
-        }
+                log.info('User signed in successfully', { email, userId: data.user?.id });
+                return data;
+            } catch (error) {
+                log.error('Exception in signIn', { email, error: error.message });
+                throw error;
+            }
+        });
     },
 
     /**
@@ -92,20 +116,52 @@ export const AuthRepositoryImpl = {
      * @memberof AuthRepositoryImpl
      */
     signOut: async (token) => {
-        try {
-            log.info('Attempting user signout');
+        return throughCircuit('signOut', async () => {
+            try {
+                log.info('Attempting user signout');
 
-            const { error } = await supabase.auth.signOut({ accessToken: token });
-            if (error) {
-                log.error('Signout failed', { error: error.message });
-                throw badRequestException(error.message);
+                const { error } = await supabase.auth.signOut({ accessToken: token });
+                if (error) {
+                    log.error('Signout failed', { error: error.message });
+                    throw badRequestException(error.message);
+                }
+
+                log.info('User signed out successfully');
+            } catch (error) {
+                log.error('Exception in signOut', { error: error.message });
+                throw error;
             }
+        });
+    },
 
-            log.info('User signed out successfully');
-        } catch (error) {
-            log.error('Exception in signOut', { error: error.message });
-            throw error;
-        }
+    /**
+     * Refresh user session using refresh token
+     * @param {string} refreshToken - User's refresh token
+     * @returns {Promise<object>} New session with access token
+     * @throws {Error} When refresh fails
+     * @memberof AuthRepositoryImpl
+     */
+    refreshSession: async (refreshToken) => {
+        return throughCircuit('refreshSession', async () => {
+            try {
+                log.info('Attempting token refresh');
+
+                const { data, error } = await supabase.auth.refreshSession({
+                    refresh_token: refreshToken,
+                });
+
+                if (error) {
+                    log.error('Token refresh failed', { error: error.message });
+                    throw unauthorizedException('Session expired, please login again');
+                }
+
+                log.info('Token refreshed successfully', { userId: data.user?.id });
+                return data;
+            } catch (error) {
+                log.error('Exception in refreshSession', { error: error.message });
+                throw error;
+            }
+        });
     },
 
     /**
@@ -116,21 +172,23 @@ export const AuthRepositoryImpl = {
      * @memberof AuthRepositoryImpl
      */
     getUser: async (token) => {
-        try {
-            log.debug('Fetching user from token');
+        return throughCircuit('getUser', async () => {
+            try {
+                log.debug('Fetching user from token');
 
-            const { data, error } = await supabase.auth.getUser(token);
-            if (error) {
-                log.error('Get user failed', { error: error.message });
-                throw badRequestException(error.message);
+                const { data, error } = await supabase.auth.getUser(token);
+                if (error) {
+                    log.error('Get user failed', { error: error.message });
+                    throw badRequestException(error.message);
+                }
+
+                log.debug('User retrieved successfully', { userId: data.user?.id });
+                return data.user;
+            } catch (error) {
+                log.error('Exception in getUser', { error: error.message });
+                throw error;
             }
-
-            log.debug('User retrieved successfully', { userId: data.user?.id });
-            return data.user;
-        } catch (error) {
-            log.error('Exception in getUser', { error: error.message });
-            throw error;
-        }
+        });
     },
 
     /**
