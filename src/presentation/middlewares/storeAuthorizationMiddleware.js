@@ -1,15 +1,12 @@
-/**
- * Middleware to check if the user is the owner of a store or an admin.
- * @param {object} storeRepository - The store repository.
- * @returns {Function} Express middleware function.
- */
+import { extractUserRole } from './authorizationMiddleware.js';
+
 export const createCanModifyStore = (storeRepository) => async (req, res, next) => {
     try {
         const storeId = req.params.id;
         const userId = req.user.id;
-        const userRole = req.user.role;
+        const userRole = extractUserRole(req);
 
-        if (userRole === 'Admin') {
+        if (userRole === 'admin') {
             return next();
         }
 

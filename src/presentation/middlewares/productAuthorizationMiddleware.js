@@ -1,18 +1,13 @@
-/**
- * Middleware to verify that a user can modify a product.
- * Checks if the user owns the store associated with the product or is an admin.
- * @param {Function} getProductByIdUseCase - Use case to get product details.
- * @param {object} storeRepository - Repository to get store details.
- * @returns {Function} Express middleware function.
- */
+import { extractUserRole } from './authorizationMiddleware.js';
+
 export const createCanModifyProduct =
     (getProductByIdUseCase, storeRepository) => async (req, res, next) => {
         try {
             const productId = req.params.id;
             const userId = req.user.id;
-            const userRole = req.user.role;
+            const userRole = extractUserRole(req);
 
-            if (userRole === 'Admin') {
+            if (userRole === 'admin') {
                 return next();
             }
 
