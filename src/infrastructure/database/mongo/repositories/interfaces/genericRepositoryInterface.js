@@ -63,9 +63,11 @@ export const findOneRecord = async (model, filter = {}, projection = null) => {
 export const findAllRecords = async (model, filter = {}, projection = null, options = {}) => {
     const defaultOptions = {
         lean: true,
-        limit: 100,
         ...options,
     };
+    if (!defaultOptions.limit) {
+        defaultOptions.limit = 10000;
+    }
     return await model.find(filter, projection, defaultOptions);
 };
 

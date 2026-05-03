@@ -1,9 +1,10 @@
 import ProductModel from '../models/ProductModel.js';
+import { paginateQuery } from '../utils/pagination.js';
 
 export const ProductRepositoryImpl = {
-    async create(productData) {
+    async create(productData, session = null) {
         const product = new ProductModel(productData);
-        await product.save();
+        await product.save({ session });
         return product.toObject();
     },
 
@@ -11,114 +12,51 @@ export const ProductRepositoryImpl = {
         return await ProductModel.findById(productId).lean();
     },
 
+    async findByIdOrSlug(idOrSlug) {
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
+        if (isObjectId) {
+            return await ProductModel.findById(idOrSlug).lean();
+        }
+        return await ProductModel.findOne({ slug: idOrSlug }).lean();
+    },
+
     async findAll(filters = {}, options = { page: 1, limit: 10 }, sort = {}) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
         const queryFilters = { ...filters };
-
-        if (filters.categoryId) {
-            queryFilters.categoryId = filters.categoryId;
-        }
-
-        if (filters.subCategoryId) {
-            queryFilters.subCategoryId = filters.subCategoryId;
-        }
-
         if (!filters.status) {
             queryFilters.status = 'Active';
         }
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find(queryFilters).sort(sortOptions).skip(skip).limit(limit).lean(),
-            ProductModel.countDocuments(queryFilters),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(ProductModel, queryFilters, options, sort);
     },
 
     async findByStoreId(storeId, options = { page: 1, limit: 10 }, sort = {}) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
+        return paginateQuery(
+            ProductModel,
+            { storeId, status: 'Active' },
+            options,
+            sort,
+        );
+    },
 
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find({ storeId, status: 'Active' })
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            ProductModel.countDocuments({ storeId, status: 'Active' }),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+    async findAllByStoreId(storeId) {
+        return await ProductModel.find({ storeId }).lean();
     },
 
     async findByCategoryId(categoryId, options = { page: 1, limit: 10 }, sort = {}) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find({ categoryId, status: 'Active' })
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            ProductModel.countDocuments({ categoryId, status: 'Active' }),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(
+            ProductModel,
+            { categoryId, status: 'Active' },
+            options,
+            sort,
+        );
     },
 
     async findBySubCategoryId(subCategoryId, options = { page: 1, limit: 10 }, sort = {}) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find({ subCategoryId, status: 'Active' })
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            ProductModel.countDocuments({ subCategoryId, status: 'Active' }),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(
+            ProductModel,
+            { subCategoryId, status: 'Active' },
+            options,
+            sort,
+        );
     },
 
     async findByCategoryAndSubCategory(
@@ -127,44 +65,39 @@ export const ProductRepositoryImpl = {
         options = { page: 1, limit: 10 },
         sort = {},
     ) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find({
-                categoryId,
-                subCategoryId,
-                status: 'Active',
-            })
-                .sort(sortOptions)
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            ProductModel.countDocuments({
-                categoryId,
-                subCategoryId,
-                status: 'Active',
-            }),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(
+            ProductModel,
+            { categoryId, subCategoryId, status: 'Active' },
+            options,
+            sort,
+        );
     },
 
     async updateById(productId, updateData) {
         return await ProductModel.findByIdAndUpdate(productId, updateData, { new: true }).lean();
     },
 
-    async deleteById(productId) {
-        return await ProductModel.findByIdAndDelete(productId).lean();
+    async deleteById(productId, session = null) {
+        return await ProductModel.findByIdAndDelete(productId, { session }).lean();
+    },
+
+    async softDeleteById(productId) {
+        return await ProductModel.findByIdAndUpdate(
+            productId,
+            { status: 'Deleted' },
+            { new: true },
+        ).lean();
+    },
+
+    async deleteManyByStoreId(storeId, session = null) {
+        return await ProductModel.deleteMany({ storeId }, { session });
+    },
+
+    async softDeleteManyByStoreId(storeId) {
+        return await ProductModel.updateMany(
+            { storeId },
+            { $set: { status: 'Deleted' } },
+        );
     },
 
     async count(filters = {}) {
@@ -188,11 +121,6 @@ export const ProductRepositoryImpl = {
     },
 
     async searchProducts(searchTerm, filters = {}, options = { page: 1, limit: 10 }, sort = {}) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
         const searchFilter = {
             status: 'Active',
             $or: [
@@ -202,22 +130,8 @@ export const ProductRepositoryImpl = {
                 { subCategoryName: { $regex: searchTerm, $options: 'i' } },
             ],
         };
-
         const queryFilters = { ...searchFilter, ...filters };
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find(queryFilters).sort(sortOptions).skip(skip).limit(limit).lean(),
-            ProductModel.countDocuments(queryFilters),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(ProductModel, queryFilters, options, sort);
     },
 
     async findProductsByPriceRange(
@@ -227,56 +141,19 @@ export const ProductRepositoryImpl = {
         options = { page: 1, limit: 10 },
         sort = {},
     ) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
         const priceFilter = {
             status: 'Active',
             price: { $gte: minPrice, $lte: maxPrice },
         };
-
         const queryFilters = { ...priceFilter, ...filters };
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find(queryFilters).sort(sortOptions).skip(skip).limit(limit).lean(),
-            ProductModel.countDocuments(queryFilters),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(ProductModel, queryFilters, options, sort);
     },
 
     async findProductsWithCategoryInfo(filters = {}, options = { page: 1, limit: 10 }, sort = {}) {
-        const { page, limit } = options;
-        const skip = (page - 1) * limit;
-
-        const sortOptions = Object.keys(sort).length > 0 ? sort : { createdAt: -1 };
-
         const queryFilters = { ...filters };
         if (!filters.status) {
             queryFilters.status = 'Active';
         }
-
-        const [data, totalItems] = await Promise.all([
-            ProductModel.find(queryFilters).sort(sortOptions).skip(skip).limit(limit).lean(),
-            ProductModel.countDocuments(queryFilters),
-        ]);
-
-        return {
-            data,
-            totalItems,
-            totalPages: Math.ceil(totalItems / limit),
-            currentPage: page,
-            hasNextPage: page < Math.ceil(totalItems / limit),
-            hasPrevPage: page > 1,
-        };
+        return paginateQuery(ProductModel, queryFilters, options, sort);
     },
 };

@@ -8,5 +8,6 @@ export const IProductRepository = {
     findAll: null, // Should accept pagination options { page, limit }
     updateById: null,
     deleteById: null,
+    softDeleteById: null,
     count: null,
 };

@@ -11,6 +11,14 @@ export const StoreRepositoryImpl = {
         return await StoreModel.findById(storeId).lean();
     },
 
+    async findByIdOrSlug(idOrSlug) {
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(idOrSlug);
+        if (isObjectId) {
+            return await StoreModel.findById(idOrSlug).lean();
+        }
+        return await StoreModel.findOne({ slug: idOrSlug }).lean();
+    },
+
     async findByUserId(userId) {
         return await StoreModel.findOne({ userId: userId }).lean();
     },
