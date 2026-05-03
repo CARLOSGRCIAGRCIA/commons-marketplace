@@ -296,6 +296,7 @@ ehthumbs_vista.db
 
 # Dump file
 *.stackdump
+.agents
 
 # Folder config file
 [Dd]esktop.ini
@@ -312,6 +313,7 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+skills-lock.json
 
 # End of https://www.toptal.com/developers/gitignore/api/node,visualstudiocode,jetbrains,linux,windows
 
