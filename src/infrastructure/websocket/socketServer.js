@@ -1,9 +1,12 @@
 import { Server } from 'socket.io';
 import { log } from '../logger/logger.js';
+import { setWebSocketServer } from './socket-instance.js';
+import { getEnvironmentConfig } from '../../config/environment.js';
+
+const envConfig = getEnvironmentConfig();
 
 /**
  * WebSocket server for real-time communication.
- * @class
  */
 class WebSocketServer {
     /**
@@ -11,10 +14,12 @@ class WebSocketServer {
      * @param {object} httpServer - HTTP server instance
      */
     constructor(httpServer) {
+        setWebSocketServer(this);
         this.io = new Server(httpServer, {
             cors: {
-                origin: '*',
+                origin: envConfig.corsOrigins.length > 0 ? envConfig.corsOrigins : true,
                 methods: ['GET', 'POST'],
+                credentials: true,
             },
             pingTimeout: 60000,
             pingInterval: 25000,
