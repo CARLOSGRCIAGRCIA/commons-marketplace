@@ -11,22 +11,22 @@ export const getStoreProductsUseCase =
     (productRepository, storeRepository) =>
     /**
      * Executes the get store products use case.
-     * @param {string} storeId - The store ID to get products from.
+     * @param {string} storeIdOrSlug - The store ID or slug to get products from.
      * @param {object} [options] - Pagination options.
      * @param {number} options.page - Current page number.
      * @param {number} options.limit - Items per page.
      * @param {object} [sort] - Sort criteria.
      * @returns {Promise<PaginationResponseDTO>} Paginated product list.
      */
-    async (storeId, options = { page: 1, limit: 10 }, sort = {}) => {
-        const store = await storeRepository.findById(storeId);
+    async (storeIdOrSlug, options = { page: 1, limit: 10 }, sort = {}) => {
+        const store = await storeRepository.findByIdOrSlug(storeIdOrSlug);
         if (!store) {
             throw new Error('Store not found');
         }
 
         const { page, limit } = options;
 
-        const result = await productRepository.findByStoreId(storeId, { page, limit }, sort);
+        const result = await productRepository.findByStoreId(store._id, { page, limit }, sort);
 
         const products = result.data || [];
         const totalItems = result.totalItems || 0;

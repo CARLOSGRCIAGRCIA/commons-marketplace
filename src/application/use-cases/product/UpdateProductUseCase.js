@@ -5,6 +5,7 @@ import {
     replaceImage,
 } from '../../../core/services/fileService.js';
 import { log } from '../../../infrastructure/logger/logger.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 /**
  * Use case for updating an existing product with optional image updates.
@@ -163,6 +164,9 @@ export const updateProductUseCase =
                 productName: updatedProduct.name,
                 action,
             });
+
+            invalidateCache('products:');
+            invalidateCache(`product:${productId}`);
 
             return createProductResponseDTO(updatedProduct);
         } catch (error) {

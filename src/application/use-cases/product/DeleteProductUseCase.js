@@ -1,6 +1,9 @@
 import { deleteImage, deleteMultipleImages } from '../../../core/services/fileService.js';
 import { createProductResponseDTO } from '../../dtos/products/index.js';
 import { log } from '../../../infrastructure/logger/logger.js';
+import { ok, err } from '../../../core/either/Result.js';
+import { InfrastructureError } from '../../../core/errors/index.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 /**
  * Use case for deleting a product and its associated images.
@@ -13,7 +16,7 @@ export const deleteProductUseCase =
     /**
      * Executes the delete product use case.
      * @param {string} productId - The ID of the product to delete.
-     * @returns {Promise<object|null>} The deleted product DTO or null if not found.
+     * @returns {Promise<Result>} Ok with the deleted product DTO or null, or Err with an error.
      */
     async (productId) => {
         try {
@@ -22,7 +25,7 @@ export const deleteProductUseCase =
             const product = await productRepository.findById(productId);
             if (!product) {
                 log.warn('Product not found for deletion', { productId });
-                return null;
+                return ok(null);
             }
 
             const storeId = product.storeId;
@@ -68,18 +71,21 @@ export const deleteProductUseCase =
                 await storeRepository.decrementProductCount(storeId);
             }
 
+            invalidateCache('products:');
+            invalidateCache(`product:${productId}`);
+
             log.info('Product deleted successfully', {
                 productId,
                 productName: deletedProduct.name,
             });
 
-            return createProductResponseDTO(deletedProduct);
+            return ok(createProductResponseDTO(deletedProduct));
         } catch (error) {
             log.error('Error in deleteProductUseCase', {
                 productId,
                 error: error.message,
                 stack: error.stack,
             });
-            throw new Error(`Failed to delete product: ${error.message}`);
+            return err(new InfrastructureError(`Failed to delete product: ${error.message}`, error));
         }
     };

@@ -1,6 +1,14 @@
 import { createCreateProductDTO, createProductResponseDTO } from '../../dtos/products/index.js';
 import { uploadImage, uploadMultipleImages } from '../../../core/services/fileService.js';
 import { log } from '../../../infrastructure/logger/logger.js';
+import { ok, err } from '../../../core/either/Result.js';
+import {
+    NotFoundError,
+    ValidationError,
+    UnauthorizedError,
+    InfrastructureError,
+} from '../../../core/errors/index.js';
+import { invalidateCache } from '../../../infrastructure/cache/cacheManager.js';
 
 /**
  * Use case for creating a new product with image uploads.
@@ -18,7 +26,7 @@ export const createProductUseCase =
      * @param {object} productData - The product data to create.
      * @param {object} mainImageFile - The main image file (required).
      * @param {Array} [additionalImagesFiles] - Additional image files (max 5).
-     * @returns {Promise<object>} The created product DTO.
+     * @returns {Promise<Result>} Ok with the created product DTO, or Err with a DomainError.
      */
     async (productData, mainImageFile, additionalImagesFiles = []) => {
         log.info('Creating new product', {
@@ -29,56 +37,71 @@ export const createProductUseCase =
 
         if (!mainImageFile) {
             log.warn('Product creation failed: Main image not provided');
-            throw new Error('Main product image is required');
+            return err(new ValidationError('Main product image is required'));
         }
 
         if (!productData.storeId) {
             log.warn('Product creation failed: Store ID not provided');
-            throw new Error('Store ID is required. Products must be associated with a store.');
+            return err(
+                new ValidationError(
+                    'Store ID is required. Products must be associated with a store.',
+                ),
+            );
         }
 
         if (!productData.categoryId) {
             log.warn('Product creation failed: Category ID not provided');
-            throw new Error(
-                'Category ID is required. Products must be associated with a category.',
+            return err(
+                new ValidationError(
+                    'Category ID is required. Products must be associated with a category.',
+                ),
             );
         }
 
         try {
-            log.debug('Validating store', { storeId: productData.storeId });
-            const store = await storeRepository.findById(productData.storeId);
+            const storeIdOrSlug = productData.storeId || productData.storeSlug;
+            log.debug('Validating store', { storeIdOrSlug });
+            const store = await storeRepository.findByIdOrSlug(storeIdOrSlug);
             if (!store) {
-                log.warn('Store not found', { storeId: productData.storeId });
-                throw new Error('Store not found.');
+                log.warn('Store not found', { storeIdOrSlug });
+                return err(new NotFoundError('Store not found.'));
             }
+            productData.storeId = store._id;
 
             if (store.userId !== productData.sellerId) {
                 log.warn('Store ownership validation failed', {
                     storeUserId: store.userId,
                     sellerId: productData.sellerId,
                 });
-                throw new Error('You can only create products for your own stores.');
+                return err(new UnauthorizedError('You can only create products for your own stores.'));
             }
 
             if (store.status !== 'Approved') {
                 log.warn('Store not approved', {
-                    storeId: productData.storeId,
+                    storeId: store._id,
                     status: store.status,
                 });
-                throw new Error(
-                    `Cannot create products for a store with status: ${store.status}. Store must be Approved.`,
+                return err(
+                    new ValidationError(
+                        `Cannot create products for a store with status: ${store.status}. Store must be Approved.`,
+                    ),
                 );
             }
 
             const categoryIds = store.categoryIds?.map(id => id.toString()) || [];
-            if (categoryIds.length > 0 && !categoryIds.includes(productData.categoryId.toString())) {
+            if (
+                categoryIds.length > 0 &&
+                !categoryIds.includes(productData.categoryId.toString())
+            ) {
                 log.warn('Product category not allowed for store', {
                     storeId: productData.storeId,
                     productCategory: productData.categoryId,
                     storeCategories: categoryIds,
                 });
-                throw new Error(
-                    'This category is not allowed for this store. Please select a category from the store\'s allowed categories.',
+                return err(
+                    new ValidationError(
+                        'This category is not allowed for this store. Please select a category from the store\'s allowed categories.',
+                    ),
                 );
             }
 
@@ -86,7 +109,7 @@ export const createProductUseCase =
             const category = await categoryRepository.findById(productData.categoryId);
             if (!category || !category.isActive) {
                 log.warn('Category not found or inactive', { categoryId: productData.categoryId });
-                throw new Error('Category not found or inactive.');
+                return err(new NotFoundError('Category not found or inactive.'));
             }
 
             let subCategory = null;
@@ -98,7 +121,7 @@ export const createProductUseCase =
                     log.warn('Subcategory not found or inactive', {
                         subCategoryId: productData.subCategoryId,
                     });
-                    throw new Error('Subcategory not found or inactive.');
+                    return err(new NotFoundError('Subcategory not found or inactive.'));
                 }
 
                 if (subCategory.parent?.toString() !== productData.categoryId) {
@@ -107,7 +130,9 @@ export const createProductUseCase =
                         categoryId: productData.categoryId,
                         subCategoryParent: subCategory.parent,
                     });
-                    throw new Error('Subcategory does not belong to the selected category.');
+                    return err(
+                        new ValidationError('Subcategory does not belong to the selected category.'),
+                    );
                 }
             }
 
@@ -140,12 +165,15 @@ export const createProductUseCase =
 
             await storeRepository.incrementProductCount(productData.storeId);
 
+            invalidateCache('products:');
+            invalidateCache(`store:${productData.storeId}`);
+
             log.info('Product created successfully', {
                 productId: newProduct.id,
                 productName: newProduct.name,
             });
 
-            return createProductResponseDTO(newProduct);
+            return ok(createProductResponseDTO(newProduct));
         } catch (error) {
             log.error('Error in createProductUseCase', {
                 error: error.message,
@@ -156,6 +184,6 @@ export const createProductUseCase =
                     categoryId: productData.categoryId,
                 },
             });
-            throw new Error(`Failed to create product: ${error.message}`);
+            return err(new InfrastructureError(`Failed to create product: ${error.message}`, error));
         }
     };
