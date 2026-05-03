@@ -40,8 +40,17 @@ export const createUserController = (
 
     updateUserById: async (req, res, next) => {
         try {
-            const dto = UpdateUserDTO.from(req.body);
-            const result = await updateUserUC(req.params.id, dto);
+            const { name, lastName, phoneNumber, address } = req.body;
+            const file = req.file;
+            
+            const updateData = {
+                name,
+                lastName,
+                phoneNumber,
+                address,
+            };
+            
+            const result = await updateUserUC(req.params.id, updateData, file);
             res.status(200).json(result);
         } catch (error) {
             next(error);

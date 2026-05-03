@@ -33,7 +33,7 @@ export function createProductController({
         async createProduct(req, res, next) {
             try {
                 const sellerId = req.user.id;
-                const { name, description, price, stock, categoryId, subCategoryId, storeId } =
+                const { name, description, price, stock, categoryId, subCategoryId, storeId, storeSlug } =
                     req.body;
 
                 const mainImageFile = req.files?.mainImage?.[0];
@@ -47,16 +47,23 @@ export function createProductController({
                     categoryId,
                     subCategoryId,
                     sellerId,
-                    storeId,
+                    storeId: storeId || storeSlug,
                 };
 
-                const newProduct = await createProductUseCase(
+                const result = await createProductUseCase(
                     productData,
                     mainImageFile,
                     additionalImagesFiles,
                 );
 
-                res.status(201).json(newProduct);
+                if (result.isErr) {
+                    return res.status(result.error.statusCode || 500).json({
+                        error: result.error.code,
+                        message: result.error.message,
+                    });
+                }
+
+                res.status(201).json(result.value);
             } catch (error) {
                 next(error);
             }
@@ -154,7 +161,7 @@ export function createProductController({
          */
         async getStoreProducts(req, res, next) {
             try {
-                const { storeId } = req.params;
+                const { storeIdOrSlug } = req.params;
                 const { page: pageStr, limit: limitStr, sortBy, order } = req.query;
 
                 const page = parseInt(pageStr, 10) || 1;
@@ -167,7 +174,7 @@ export function createProductController({
                 }
 
                 const paginatedResult = await getStoreProductsUseCase(
-                    storeId,
+                    storeIdOrSlug,
                     { page, limit },
                     sortOptions,
                 );
@@ -186,8 +193,8 @@ export function createProductController({
          */
         async getProductById(req, res, next) {
             try {
-                const { id } = req.params;
-                const product = await getProductByIdUseCase(id);
+                const { idOrSlug } = req.params;
+                const product = await getProductByIdUseCase(idOrSlug);
                 if (!product) {
                     return res.status(404).json({ message: 'Product not found' });
                 }
@@ -250,8 +257,16 @@ export function createProductController({
         async deleteProduct(req, res, next) {
             try {
                 const { id } = req.params;
-                const deletedProduct = await deleteProductUseCase(id);
-                if (!deletedProduct) {
+                const result = await deleteProductUseCase(id);
+
+                if (result.isErr) {
+                    return res.status(result.error.statusCode || 500).json({
+                        error: result.error.code,
+                        message: result.error.message,
+                    });
+                }
+
+                if (!result.value) {
                     return res.status(404).json({ message: 'Product not found' });
                 }
                 res.status(204).send();
@@ -271,6 +286,31 @@ export function createProductController({
                 if (error.message === 'Product not found') {
                     return res.status(404).json({ message: 'Product not found' });
                 }
+                next(error);
+            }
+        },
+
+        async searchProducts(req, res, next) {
+            try {
+                const { page: pageStr, limit: limitStr, sortBy, order } = req.query;
+                const page = parseInt(pageStr, 10) || 1;
+                const limit = parseInt(limitStr, 10) || 10;
+                const sortOptions = {};
+                if (sortBy) {
+                    sortOptions[sortBy] = order === 'desc' ? -1 : 1;
+                }
+                const { categoryId, subCategoryId, ...otherFilters } = req.query;
+                const filters = {};
+                if (categoryId) filters.categoryId = categoryId;
+                if (subCategoryId) filters.subCategoryId = subCategoryId;
+                Object.assign(filters, otherFilters);
+                delete filters.page;
+                delete filters.limit;
+                delete filters.sortBy;
+                delete filters.order;
+                const results = await getAllProductsUseCase(filters, { page, limit }, sortOptions);
+                res.status(200).json(results);
+            } catch (error) {
                 next(error);
             }
         },

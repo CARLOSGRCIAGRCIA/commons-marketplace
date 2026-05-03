@@ -1,4 +1,5 @@
 import { badRequestException } from '../exceptions/index.js';
+import { getWebSocketServer } from '../../infrastructure/websocket/socket-instance.js';
 
 /**
  * Send message controller
@@ -24,6 +25,16 @@ export const sendMessage = ({ sendMessageUseCase }) => {
                 type,
                 metadata,
             });
+
+            const wsServer = getWebSocketServer();
+            if (wsServer) {
+                wsServer.emitToUser(receiverId, 'new-message', {
+                    from: senderId,
+                    message,
+                    conversationId: message.conversationId,
+                    timestamp: new Date().toISOString(),
+                });
+            }
 
             return res.status(201).json({
                 success: true,

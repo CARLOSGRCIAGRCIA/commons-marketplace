@@ -124,9 +124,16 @@ export function createStoreController({
         async deleteStore(req, res, next) {
             try {
                 const storeId = req.params.id;
-                const deletedStore = await deleteStoreUseCase(storeId);
+                const result = await deleteStoreUseCase(storeId);
 
-                if (!deletedStore) {
+                if (result.isErr) {
+                    return res.status(result.error.statusCode || 500).json({
+                        error: result.error.code,
+                        message: result.error.message,
+                    });
+                }
+
+                if (!result.value) {
                     return res.status(404).json({ message: 'Store not found.' });
                 }
 
@@ -144,8 +151,8 @@ export function createStoreController({
          */
         async getStoreById(req, res, next) {
             try {
-                const storeId = req.params.id;
-                const store = await getStoreByIdUseCase(storeId);
+                const idOrSlug = req.params.idOrSlug;
+                const store = await getStoreByIdUseCase(idOrSlug);
 
                 if (!store) {
                     return res.status(404).json({ message: 'Store not found.' });
