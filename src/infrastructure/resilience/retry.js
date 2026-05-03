@@ -9,6 +9,7 @@ const DEFAULT_RETRY_OPTS = {
     backoffMultiplier: 2,
     maxRetryDelay: 10000,
     transientErrors: ['ECONNRESET', 'ETIMEDOUT', 'ENOTFOUND', 'EHOSTUNREACH'],
+    retryOn: { any: () => false },
 };
 
 /**

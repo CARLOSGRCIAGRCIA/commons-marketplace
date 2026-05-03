@@ -1,8 +1,3 @@
-/**
- * Environment configuration
- * @description Centralized configuration for different environments
- */
-
 const environments = {
     local: {
         corsOrigins: [
@@ -22,16 +17,20 @@ const environments = {
         logLevel: 'debug',
     },
     development: {
-        corsOrigins: [''],
-        apiUrl: '',
-        uiUrl: '',
+        corsOrigins: process.env.CORS_ORIGINS
+            ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
+            : ['http://localhost:3000', 'http://localhost:8080'],
+        apiUrl: process.env.API_URL || 'http://localhost:3000',
+        uiUrl: process.env.UI_URL || 'http://localhost:8080',
         enableSwagger: true,
         logLevel: 'debug',
     },
     production: {
-        corsOrigins: ['', ''],
-        apiUrl: '',
-        uiUrl: '',
+        corsOrigins: process.env.CORS_ORIGINS
+            ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
+            : [],
+        apiUrl: process.env.API_URL || '',
+        uiUrl: process.env.UI_URL || '',
         enableSwagger: false,
         logLevel: 'error',
     },
@@ -44,10 +43,6 @@ const environments = {
     },
 };
 
-/**
- * Get current environment configuration
- * @returns {object} Environment configuration
- */
 const getEnvironmentConfig = () => {
     const env = process.env.NODE_ENV || 'development';
     const config = environments[env];
@@ -60,22 +55,15 @@ const getEnvironmentConfig = () => {
         ...config,
         nodeEnv: env,
         port: parseInt(process.env.PORT || '3000', 10),
-        // Database
         dbUrl: process.env.DB_URL,
-        // Supabase
         supabaseUrl: process.env.SUPABASE_URL,
         supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
         supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
         supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET || 'CommonMarketplace',
-        // Ably
         ablyApiKey: process.env.ABLY_API_KEY,
     };
 };
 
-/**
- * Validate required environment variables
- * @throws {Error} If required variables are missing
- */
 const validateEnvironment = () => {
     const required = [
         'DB_URL',

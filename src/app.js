@@ -7,6 +7,7 @@ import categoryRoutes from './presentation/routes/categoryRoutes.js';
 import { createProductRoutes } from './presentation/routes/productRoutes.js';
 import { createStoreRoutes } from './presentation/routes/storeRoutes.js';
 import { createChatRoutes } from './presentation/routes/chatRoutes.js';
+import { createWishlistRoutes } from './presentation/routes/wishlistRoutes.js';
 import { createAdminRoutes } from './presentation/routes/adminRoutes.js';
 import { createReviewRoutes } from './presentation/routes/reviewRoutes.js';
 import { createSellerRequestRoutes } from './presentation/routes/sellerRequestRoutes.js';
@@ -20,11 +21,6 @@ import logger from './infrastructure/logger/logger.js';
 import { getEnvironmentConfig } from './config/environment.js';
 import { authenticate } from './presentation/middlewares/authMiddleware.js';
 
-/**
- * Create Express application
- * @description Initializes and configures the Express application with all routes
- * @returns {Promise<object>} Configured Express application
- */
 const createApp = async () => {
     const app = express();
     const envConfig = getEnvironmentConfig();
@@ -53,37 +49,23 @@ const createApp = async () => {
 
     setupExpress(app);
 
-const container = createContainer();
-
-    const containerV1 = createContainer();
+    const container = createContainer();
 
     const v1Router = express.Router();
 
-    v1Router.use('/auth', createAuthRoutes(containerV1.authController));
-    v1Router.use('/users', createUserRoutes(containerV1.userController));
-    v1Router.use('/categories', categoryRoutes(containerV1));
-    v1Router.use('/products', createProductRoutes(containerV1.productController, containerV1.canModifyProduct));
-    v1Router.use('/stores', createStoreRoutes(containerV1.storeController, containerV1.canModifyStore));
-    v1Router.use('/admin', createAdminRoutes(containerV1.adminController));
-    v1Router.use('/chat', createChatRoutes(containerV1.chatController));
-    v1Router.use('/reviews', createReviewRoutes(containerV1.reviewController));
-    v1Router.use('/seller-requests', createSellerRequestRoutes(containerV1.sellerRequestController));
-    v1Router.use('/coupons', createCouponRoutes(containerV1.couponController));
+    v1Router.use('/auth', createAuthRoutes(container.authController));
+    v1Router.use('/users', createUserRoutes(container.userController));
+    v1Router.use('/categories', categoryRoutes(container));
+    v1Router.use('/products', createProductRoutes(container.productController, container.canModifyProduct));
+    v1Router.use('/stores', createStoreRoutes(container.storeController, container.canModifyStore));
+    v1Router.use('/admin', createAdminRoutes(container.adminController, container.productController));
+    v1Router.use('/chat', createChatRoutes(container.chatController));
+    v1Router.use('/wishlist', createWishlistRoutes(container.wishlistController));
+    v1Router.use('/reviews', createReviewRoutes(container.reviewController));
+    v1Router.use('/seller-requests', createSellerRequestRoutes(container.sellerRequestController));
+    v1Router.use('/coupons', createCouponRoutes(container.couponController));
 
     app.use('/api/v1', v1Router);
-
-    app.use((req, res, next) => {
-        if (req.path.startsWith('/api/') && !req.path.startsWith('/api/v1')) {
-            logger.warn('Deprecated API endpoint accessed', {
-                path: req.originalUrl,
-                method: req.method,
-                ip: req.ip,
-            });
-            res.set('Deprecation', 'true');
-            res.set('Link', '<https://api.example.com/api/v1' + req.path + '>; rel="v1"');
-        }
-        next();
-    });
 
     app.use('/api/auth', createAuthRoutes(container.authController));
     app.use('/api/users', createUserRoutes(container.userController));
@@ -93,8 +75,9 @@ const container = createContainer();
         createProductRoutes(container.productController, container.canModifyProduct),
     );
     app.use('/api/stores', createStoreRoutes(container.storeController, container.canModifyStore));
-    app.use('/api/admin', createAdminRoutes(container.adminController));
+    app.use('/api/admin', createAdminRoutes(container.adminController, container.productController));
     app.use('/api/chat', createChatRoutes(container.chatController));
+    app.use('/api/wishlist', createWishlistRoutes(container.wishlistController));
     app.use('/api/reviews', createReviewRoutes(container.reviewController));
     app.use('/api/seller-requests', createSellerRequestRoutes(container.sellerRequestController));
     app.use('/api/coupons', createCouponRoutes(container.couponController));
@@ -110,14 +93,14 @@ const container = createContainer();
         const availableRoutes = [
             '/api/v1/auth',
             '/api/v1/users',
-            '/api/categories',
-            '/api/products',
-            '/api/stores',
-            '/api/chat',
-            '/api/reviews',
-            '/api/coupons',
-            '/api/seller-requests',
-            '/api/admin',
+            '/api/v1/categories',
+            '/api/v1/products',
+            '/api/v1/stores',
+            '/api/v1/chat',
+            '/api/v1/reviews',
+            '/api/v1/coupons',
+            '/api/v1/seller-requests',
+            '/api/v1/admin',
             '/health',
         ];
 
@@ -134,26 +117,6 @@ const container = createContainer();
     });
 
     app.use(errorHandler);
-
-    app.use((error, req, res, next) => {
-        logger.error('Unhandled error', {
-            message: error.message,
-            stack: error.stack,
-            path: req.path,
-            method: req.method,
-            ip: req.ip,
-        });
-
-        const isDevelopment = envConfig.nodeEnv === 'development';
-
-        res.status(error.status || 500).json({
-            error: error.status ? error.message : 'Internal server error',
-            ...(isDevelopment && {
-                stack: error.stack,
-                details: error.details,
-            }),
-        });
-    });
 
     return app;
 };

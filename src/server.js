@@ -1,6 +1,7 @@
 import createApp from './app.js';
 import { getEnvironmentConfig, validateEnvironment } from './config/environment.js';
 import logger from './infrastructure/logger/logger.js';
+import { WebSocketServer } from './infrastructure/websocket/index.js';
 
 /**
  * Start the server
@@ -45,6 +46,8 @@ const startServer = async () => {
             );
             logger.info('║                                                                  ║');
             logger.info('╚══════════════════════════════════════════════════════════════════╝');
+
+            new WebSocketServer(server);
         });
 
         const gracefulShutdown = (signal) => {

@@ -23,7 +23,6 @@ export class CircuitBreaker {
         this.failureThreshold = options.failureThreshold || 5;
         this.successThreshold = options.successThreshold || 2;
         this.timeout = options.timeout || 30000;
-        this.timeout = options.timeout || 30000;
         this.monitored = options.monitored || [];
 
         this.state = CircuitState.CLOSED;

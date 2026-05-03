@@ -4,17 +4,19 @@ import { CategoryRepositoryImpl } from '../database/mongo/repositories/CategoryR
 import { ProductRepositoryImpl } from '../database/mongo/repositories/ProductRepository.js';
 import { StoreRepositoryImpl } from '../database/mongo/repositories/StoreRepository.js';
 import { ReviewRepositoryImpl } from '../database/mongo/repositories/ReviewRepository.js';
-import { FileServiceImpl } from '../services/fileServiceImpl.js';
+import * as fileService from '../../core/services/fileService.js';
 import * as chatRepositoryImpl from '../ably/repositories/ChatRepositoryImpl.js';
 import * as messageRepository from '../database/mongo/repositories/MessageRepository.js';
 import * as conversationRepository from '../database/mongo/repositories/ConversationRepository.js';
 import * as sellerRequestRepository from '../database/mongo/repositories/SellerRequestRepository.js';
+import { WishlistRepositoryImpl } from '../database/mongo/repositories/WishlistRepository.js';
 
 // --- Use Cases (Application Layer) ---
 // Auth
 import { registerUseCase } from '../../application/use-cases/auth/RegisterUseCase.js';
 import { loginUseCase } from '../../application/use-cases/auth/LoginUseCase.js';
 import { logoutUseCase } from '../../application/use-cases/auth/LogoutUseCase.js';
+import { refreshTokenUseCase } from '../../application/use-cases/auth/RefreshTokenUseCase.js';
 // User
 import {
     createUserUseCase,
@@ -90,6 +92,15 @@ import {
 // Coupon (demo)
 import { claimCouponUseCase } from '../../application/use-cases/coupon/index.js';
 
+// Wishlist
+import {
+    getWishlistUseCase,
+    addToWishlistUseCase,
+    removeFromWishlistUseCase,
+    checkWishlistUseCase,
+    clearWishlistUseCase,
+} from '../../application/use-cases/wishlist/index.js';
+
 // --- Controllers & Middlewares (Presentation Layer) ---
 import { createAuthController } from '../../presentation/controllers/authController.js';
 import { createUserController } from '../../presentation/controllers/userController.js';
@@ -97,6 +108,7 @@ import { categoryController as createCategoryController } from '../../presentati
 import { createProductController } from '../../presentation/controllers/productController.js';
 import { createStoreController } from '../../presentation/controllers/storeController.js';
 import * as chatControllerModule from '../../presentation/controllers/chatController.js';
+import { createWishlistController } from '../../presentation/controllers/wishlistController.js';
 import { createAdminController } from '../../presentation/controllers/adminController.js';
 import { createReviewController } from '../../presentation/controllers/reviewController.js';
 import { createSellerRequestController } from '../../presentation/controllers/sellerRequestController.js';
@@ -114,23 +126,24 @@ export const createContainer = () => {
     const productRepo = ProductRepositoryImpl;
     const storeRepo = StoreRepositoryImpl;
     const reviewRepo = ReviewRepositoryImpl;
-    const fileService = FileServiceImpl;
     const chatRepo = chatRepositoryImpl;
     const messageRepo = messageRepository;
     const conversationRepo = conversationRepository;
     const sellerRequestRepo = sellerRequestRepository;
+    const wishlistRepo = WishlistRepositoryImpl;
 
     // --- Application Layer (Use Cases) ---
     // Auth
     const registerUC = registerUseCase(authRepo, userRepo);
-    const loginUC = loginUseCase(authRepo);
+    const loginUC = loginUseCase(authRepo, userRepo);
     const logoutUC = logoutUseCase(authRepo);
+    const refreshTokenUC = refreshTokenUseCase(authRepo);
 
     // User
     const createUserUC = createUserUseCase(userRepo);
     const getUserByIdUC = getUserByIdUseCase(userRepo);
     const getAllUsersUC = getAllUsersUseCase(userRepo);
-    const updateUserUC = updateUserUseCase(userRepo);
+    const updateUserUC = updateUserUseCase(userRepo, fileService);
     const deleteUserUC = deleteUserUseCase(userRepo);
     const getCurrentUserProfileUC = getCurrentUserProfileUseCase(userRepo, authRepo);
     const updateUserProfilePictureUC = updateUserProfilePictureUseCase(userRepo, fileService);
@@ -160,7 +173,7 @@ export const createContainer = () => {
     const getMyStoresUC = getMyStoresUseCase(storeRepo);
     const getAllStoresUC = getAllStoresUseCase(storeRepo);
     const updateStoreUC = updateStoreUseCase(storeRepo, categoryRepo, fileService);
-    const deleteStoreUC = deleteStoreUseCase(storeRepo, fileService);
+    const deleteStoreUC = deleteStoreUseCase(storeRepo, productRepo, fileService);
     const getPendingStoresUC = getPendingStoresUseCase(storeRepo);
     const getStoresByStatusUC = getStoresByStatusUseCase(storeRepo);
     const updateStoreStatusUC = updateStoreStatusUseCase(storeRepo);
@@ -225,13 +238,20 @@ export const createContainer = () => {
     // Coupon (demo)
     const claimCouponUC = claimCouponUseCase();
 
+    // Wishlist
+    const getWishlistUC = getWishlistUseCase(wishlistRepo);
+    const addToWishlistUC = addToWishlistUseCase(wishlistRepo, productRepo);
+    const removeFromWishlistUC = removeFromWishlistUseCase(wishlistRepo);
+    const checkWishlistUC = checkWishlistUseCase(wishlistRepo);
+    const clearWishlistUC = clearWishlistUseCase(wishlistRepo);
+
     // --- Presentation Layer (Controllers & Middlewares) ---
     // Middlewares
     const canModifyProduct = createCanModifyProduct(getProductByIdUC, storeRepo);
     const canModifyStore = createCanModifyStore(storeRepo);
 
     // Controllers
-    const authController = createAuthController(registerUC, loginUC, logoutUC);
+    const authController = createAuthController(registerUC, loginUC, logoutUC, refreshTokenUC);
 
     const userController = createUserController(
         createUserUC,
@@ -325,6 +345,14 @@ export const createContainer = () => {
         claimCouponUseCase: claimCouponUC,
     });
 
+    const wishlistController = createWishlistController({
+        getWishlistUseCase: getWishlistUC,
+        addToWishlistUseCase: addToWishlistUC,
+        removeFromWishlistUseCase: removeFromWishlistUC,
+        checkWishlistUseCase: checkWishlistUC,
+        clearWishlistUseCase: clearWishlistUC,
+    });
+
     // --- Container Return ---
     return {
         // Controllers
@@ -335,6 +363,7 @@ export const createContainer = () => {
         storeController,
         reviewController,
         chatController,
+        wishlistController,
         adminController,
         sellerRequestController,
         couponController,
@@ -353,5 +382,6 @@ export const createContainer = () => {
         chatRepository: chatRepo,
         storeRepository: storeRepo,
         categoryRepository: categoryRepo,
+        wishlistRepository: wishlistRepo,
     };
 };
